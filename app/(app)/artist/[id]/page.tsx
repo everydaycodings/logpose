@@ -21,7 +21,8 @@ export default async function ArtistPage({
         eyebrow="Artist"
         title={artist.name}
         round
-        coverTrackId={artist.tracks[0]?.id ?? null}
+        coverSrc={`/api/artists/${artist.id}/cover`}
+        editHref={`/artist/${artist.id}/edit`}
         subtitle={`${artist.tracks.length} ${artist.tracks.length === 1 ? "song" : "songs"}`}
       >
         <PlayAllButton tracks={artist.tracks} />

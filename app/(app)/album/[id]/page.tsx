@@ -19,7 +19,8 @@ export default async function AlbumPage({
       <CollectionHeader
         eyebrow="Album"
         title={album.title}
-        coverTrackId={album.tracks[0]?.id ?? null}
+        coverSrc={`/api/albums/${album.id}/cover`}
+        editHref={`/album/${album.id}/edit`}
         subtitle={
           <>
             <Link href={`/artist/${album.artistId}`} className="hover:underline">

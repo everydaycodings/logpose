@@ -62,7 +62,7 @@ export default function RootLayout({
         fontMono.variable,
       )}
     >
-      <body className="font-sans">
+      <body className="font-sans" suppressHydrationWarning>
         <ThemeProvider>
           <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
           <Toaster />

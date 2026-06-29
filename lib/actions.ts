@@ -83,6 +83,8 @@ const updateTrackSchema = z.object({
   album: z.string().max(300).optional(),
   year: z.coerce.number().int().min(0).max(3000).optional(),
   genre: z.string().max(120).optional(),
+  trackNumber: z.coerce.number().int().min(0).max(100000).optional(),
+  discNumber: z.coerce.number().int().min(0).max(1000).optional(),
   lyrics: z.string().max(20000).optional(),
 })
 
@@ -125,12 +127,71 @@ export async function updateTrack(
       title: data.title,
       year: data.year,
       genre: data.genre,
+      trackNumber: data.trackNumber ?? null,
+      discNumber: data.discNumber ?? null,
       lyrics: data.lyrics,
       artistId,
       albumId,
     },
   })
   revalidatePath(`/track/${trackId}/edit`)
+  revalidatePath("/")
+  return { ok: true }
+}
+
+const renameSchema = z.string().min(1).max(300)
+
+/** Rename an artist (blocks if another artist already owns that name). */
+export async function updateArtist(artistId: string, name: string) {
+  const parsed = renameSchema.safeParse(name.trim())
+  if (!parsed.success) return { error: "Please enter a name." }
+  const slug = normalizeKey(parsed.data)
+
+  const clash = await db.artist.findUnique({ where: { slug } })
+  if (clash && clash.id !== artistId) {
+    return { error: `An artist named "${parsed.data}" already exists.` }
+  }
+
+  await db.artist.update({
+    where: { id: artistId },
+    data: { name: parsed.data, slug },
+  })
+  revalidatePath(`/artist/${artistId}`)
+  revalidatePath("/")
+  return { ok: true }
+}
+
+const updateAlbumSchema = z.object({
+  title: z.string().min(1).max(300),
+  year: z.coerce.number().int().min(0).max(3000).optional(),
+})
+
+/** Edit an album's title/year (blocks if the new title clashes with another). */
+export async function updateAlbum(
+  albumId: string,
+  input: z.input<typeof updateAlbumSchema>,
+) {
+  const parsed = updateAlbumSchema.safeParse(input)
+  if (!parsed.success) return { error: "Please check the fields." }
+  const { title, year } = parsed.data
+
+  const album = await db.album.findUnique({
+    where: { id: albumId },
+    include: { artist: { select: { name: true } } },
+  })
+  if (!album) return { error: "Album not found." }
+
+  const slug = albumSlug(album.artist.name, title)
+  const clash = await db.album.findUnique({ where: { slug } })
+  if (clash && clash.id !== albumId) {
+    return { error: `An album named "${title}" already exists for this artist.` }
+  }
+
+  await db.album.update({
+    where: { id: albumId },
+    data: { title, slug, year: year ?? null },
+  })
+  revalidatePath(`/album/${albumId}`)
   revalidatePath("/")
   return { ok: true }
 }

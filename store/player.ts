@@ -120,6 +120,8 @@ type PlayerState = {
   clearSeek: () => void
   setProgress: (positionMs: number, durationMs: number) => void
   setExpanded: (v: boolean) => void
+  /** Restore the saved queue from localStorage — called once, post-hydration. */
+  hydrateSession: () => void
   enqueue: (track: PlayableTrack, playNext?: boolean) => void
   removeAt: (index: number) => void
   reorder: (from: number, to: number) => void
@@ -156,15 +158,15 @@ function persist(get: () => PlayerState) {
   })
 }
 
-const session = loadSession()
-
 export const usePlayer = create<PlayerState>((set, get) => ({
-  queue: session.queue ?? [],
-  ordered: session.ordered ?? null,
-  index: session.index ?? 0,
+  // Always start empty so server and client first-render match; the saved
+  // session is restored after hydration via hydrateSession().
+  queue: [],
+  ordered: null,
+  index: 0,
   isPlaying: false,
-  shuffle: session.shuffle ?? false,
-  repeat: session.repeat ?? "off",
+  shuffle: false,
+  repeat: "off",
   volume: loadPrefs().volume ?? 1,
   muted: false,
   crossfadeSec: loadPrefs().crossfadeSec ?? 0,
@@ -321,6 +323,19 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   clearSeek: () => set({ seekTarget: null }),
   setProgress: (positionMs, durationMs) => set({ positionMs, durationMs }),
   setExpanded: (v) => set({ expanded: v }),
+
+  hydrateSession: () => {
+    if (get().queue.length > 0) return
+    const saved = loadSession()
+    if (!saved.queue || saved.queue.length === 0) return
+    set({
+      queue: saved.queue,
+      ordered: saved.ordered ?? null,
+      index: saved.index ?? 0,
+      shuffle: saved.shuffle ?? false,
+      repeat: saved.repeat ?? "off",
+    })
+  },
 
   enqueue: (track, playNext = false) =>
     set((s) => {

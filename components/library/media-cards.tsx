@@ -12,12 +12,14 @@ export function CardGrid({ children }: { children: React.ReactNode }) {
 function CardShell({
   href,
   coverTrackId,
+  coverSrc,
   title,
   subtitle,
   round = false,
 }: {
   href: string
-  coverTrackId: string | null
+  coverTrackId?: string | null
+  coverSrc?: string
   title: string
   subtitle: string
   round?: boolean
@@ -29,6 +31,7 @@ function CardShell({
     >
       <Cover
         coverTrackId={coverTrackId}
+        coverSrc={coverSrc}
         alt={title}
         rounded={round ? "rounded-full" : "rounded-xl"}
         className="shadow-sm transition-transform group-hover:-translate-y-0.5"
@@ -55,7 +58,7 @@ export function AlbumCard({
   return (
     <CardShell
       href={`/album/${album.id}`}
-      coverTrackId={album.trackId}
+      coverSrc={`/api/albums/${album.id}/cover`}
       title={album.title}
       subtitle={album.year ? `${album.artist} · ${album.year}` : album.artist}
     />
@@ -75,7 +78,7 @@ export function ArtistCard({
     >
       <div className="rounded-full p-1 ring-1 ring-seal/30 transition-all group-hover:ring-2 group-hover:ring-seal/60">
         <Cover
-          coverTrackId={artist.trackId}
+          coverSrc={`/api/artists/${artist.id}/cover`}
           alt={artist.name}
           rounded="rounded-full"
           className="shadow-sm transition-transform group-hover:-translate-y-0.5"

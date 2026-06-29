@@ -17,11 +17,21 @@ type Data = {
   album: string
   year?: number
   genre: string
+  trackNumber?: number
+  discNumber?: number
   lyrics: string
   hasCover: boolean
 }
 
-export function EditForm({ data }: { data: Data }) {
+export function EditForm({
+  data,
+  artistNames,
+  albumTitles,
+}: {
+  data: Data
+  artistNames: string[]
+  albumTitles: string[]
+}) {
   const router = useRouter()
   const [form, setForm] = useState(data)
   const [saving, setSaving] = useState(false)
@@ -42,6 +52,8 @@ export function EditForm({ data }: { data: Data }) {
       album: form.album || undefined,
       year: form.year,
       genre: form.genre || undefined,
+      trackNumber: form.trackNumber,
+      discNumber: form.discNumber,
       lyrics: form.lyrics || undefined,
     })
     setSaving(false)
@@ -105,15 +117,27 @@ export function EditForm({ data }: { data: Data }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Artist">
             <Input
+              list="artist-names"
               value={form.artist}
               onChange={(e) => set("artist", e.target.value)}
             />
+            <datalist id="artist-names">
+              {artistNames.map((n) => (
+                <option key={n} value={n} />
+              ))}
+            </datalist>
           </Field>
           <Field label="Album">
             <Input
+              list="album-titles"
               value={form.album}
               onChange={(e) => set("album", e.target.value)}
             />
+            <datalist id="album-titles">
+              {albumTitles.map((t) => (
+                <option key={t} value={t} />
+              ))}
+            </datalist>
           </Field>
           <Field label="Year">
             <Input
@@ -128,6 +152,30 @@ export function EditForm({ data }: { data: Data }) {
             <Input
               value={form.genre}
               onChange={(e) => set("genre", e.target.value)}
+            />
+          </Field>
+          <Field label="Track no.">
+            <Input
+              type="number"
+              value={form.trackNumber ?? ""}
+              onChange={(e) =>
+                set(
+                  "trackNumber",
+                  e.target.value ? Number(e.target.value) : undefined,
+                )
+              }
+            />
+          </Field>
+          <Field label="Disc no.">
+            <Input
+              type="number"
+              value={form.discNumber ?? ""}
+              onChange={(e) =>
+                set(
+                  "discNumber",
+                  e.target.value ? Number(e.target.value) : undefined,
+                )
+              }
             />
           </Field>
         </div>

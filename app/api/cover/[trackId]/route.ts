@@ -7,7 +7,7 @@ import { s3 } from "@/lib/s3"
 // Proxies cover art same-origin (so the player can sample its colors on a
 // canvas without cross-origin tainting), falling back track -> album.
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   ctx: RouteContext<"/api/cover/[trackId]">,
 ) {
   const { trackId } = await ctx.params
@@ -17,6 +17,13 @@ export async function GET(
   })
   const key = track?.coverKey ?? track?.album?.coverKey
   if (!key) return new Response("No cover", { status: 404 })
+
+  // ETag is the storage key, which changes on every cover update — so the
+  // browser revalidates and never serves a stale image after an edit.
+  const etag = `"${key}"`
+  if (req.headers.get("if-none-match") === etag) {
+    return new Response(null, { status: 304 })
+  }
 
   try {
     const res = await s3.send(
@@ -28,7 +35,8 @@ export async function GET(
     return new Response(body, {
       headers: {
         "Content-Type": res.ContentType ?? "image/jpeg",
-        "Cache-Control": "private, max-age=86400",
+        "Cache-Control": "private, no-cache",
+        ETag: etag,
       },
     })
   } catch {

@@ -233,8 +233,45 @@ export async function getTrackEditData(id: string) {
     album: t.album?.title ?? "",
     year: t.year ?? undefined,
     genre: t.genre ?? "",
+    trackNumber: t.trackNumber ?? undefined,
+    discNumber: t.discNumber ?? undefined,
     lyrics: t.lyrics ?? "",
     hasCover: Boolean(t.coverKey),
+  }
+}
+
+/** Distinct artist names + album titles, for edit-form autocomplete pickers. */
+export async function getEditPickers() {
+  const [artists, albums] = await Promise.all([
+    db.artist.findMany({ select: { name: true }, orderBy: { name: "asc" } }),
+    db.album.findMany({ select: { title: true }, orderBy: { title: "asc" } }),
+  ])
+  return {
+    artistNames: [...new Set(artists.map((a) => a.name))],
+    albumTitles: [...new Set(albums.map((a) => a.title))],
+  }
+}
+
+export async function getArtistEditData(id: string) {
+  const artist = await db.artist.findUnique({
+    where: { id },
+    select: { id: true, name: true, coverKey: true },
+  })
+  if (!artist) return null
+  return { id: artist.id, name: artist.name, hasCover: Boolean(artist.coverKey) }
+}
+
+export async function getAlbumEditData(id: string) {
+  const album = await db.album.findUnique({
+    where: { id },
+    select: { id: true, title: true, year: true, coverKey: true },
+  })
+  if (!album) return null
+  return {
+    id: album.id,
+    title: album.title,
+    year: album.year ?? undefined,
+    hasCover: Boolean(album.coverKey),
   }
 }
 

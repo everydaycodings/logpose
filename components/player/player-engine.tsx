@@ -71,6 +71,12 @@ export function PlayerEngine() {
     return els.current[activeRef.current]!
   }
 
+  // Restore the saved queue once, after hydration (avoids SSR/localStorage
+  // mismatch by keeping the first client render identical to the server).
+  useEffect(() => {
+    usePlayer.getState().hydrateSession()
+  }, [])
+
   // --- Load current track when it changes ---
   const cur = usePlayer(current)
   useEffect(() => {
