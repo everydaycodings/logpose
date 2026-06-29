@@ -73,7 +73,7 @@ export function PlayerBar() {
           </button>
 
           {/* Transport + seek (center) */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="hidden flex-col items-center gap-1 md:flex">
             <div className="flex items-center gap-1">
               <IconToggle
                 active={shuffle}
