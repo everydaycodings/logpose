@@ -19,8 +19,17 @@ export default async function PlaylistPage({
       <CollectionHeader
         eyebrow="Playlist"
         title={playlist.name}
-        coverTrackId={playlist.tracks[0]?.id ?? null}
-        subtitle={`${playlist.tracks.length} ${playlist.tracks.length === 1 ? "song" : "songs"}`}
+        coverSrc={`/api/playlists/${playlist.id}/cover`}
+        editHref={`/playlist/${playlist.id}/edit`}
+        subtitle={
+          <>
+            {playlist.description && (
+              <span className="mb-1 block">{playlist.description}</span>
+            )}
+            {playlist.tracks.length}{" "}
+            {playlist.tracks.length === 1 ? "song" : "songs"}
+          </>
+        }
       >
         <div className="flex items-center gap-2">
           <PlayAllButton tracks={playlist.tracks} />

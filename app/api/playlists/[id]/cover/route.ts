@@ -6,25 +6,26 @@ import { env } from "@/lib/env"
 import { deleteCoverIfUnreferenced } from "@/lib/services/library"
 import { putObject, s3 } from "@/lib/s3"
 
-// Serves an album cover same-origin: the album's own coverKey, falling back to
-// one of its tracks' cover.
+// Serves a playlist cover same-origin: the playlist's own coverKey, falling
+// back to one of its tracks' cover.
 export async function GET(
   req: NextRequest,
-  ctx: RouteContext<"/api/albums/[id]/cover">,
+  ctx: RouteContext<"/api/playlists/[id]/cover">,
 ) {
   const { id } = await ctx.params
-  const album = await db.album.findUnique({
+  const playlist = await db.playlist.findUnique({
     where: { id },
     select: {
       coverKey: true,
       tracks: {
-        select: { coverKey: true },
-        where: { coverKey: { not: null } },
+        select: { track: { select: { coverKey: true } } },
+        where: { track: { coverKey: { not: null } } },
         take: 1,
+        orderBy: { position: "asc" },
       },
     },
   })
-  const key = album?.coverKey ?? album?.tracks[0]?.coverKey
+  const key = playlist?.coverKey ?? playlist?.tracks[0]?.track.coverKey
   if (!key) return new Response("No cover", { status: 404 })
 
   const etag = `"${key}"`
@@ -51,11 +52,10 @@ export async function GET(
   }
 }
 
-// Replace an album's cover with an uploaded image. All its tracks inherit it
-// (the track cover route already falls back album -> track).
+// Replace a playlist's cover with an uploaded image.
 export async function POST(
   req: NextRequest,
-  ctx: RouteContext<"/api/albums/[id]/cover">,
+  ctx: RouteContext<"/api/playlists/[id]/cover">,
 ) {
   const { id } = await ctx.params
   const form = await req.formData().catch(() => null)
@@ -67,16 +67,16 @@ export async function POST(
     return Response.json({ error: "Image is too large (max 10 MB)." }, { status: 413 })
   }
 
-  const album = await db.album.findUnique({
+  const playlist = await db.playlist.findUnique({
     where: { id },
     select: { coverKey: true },
   })
-  if (!album) return Response.json({ error: "Not found" }, { status: 404 })
+  if (!playlist) return Response.json({ error: "Not found" }, { status: 404 })
 
   const key = `covers/${randomUUID()}.jpg`
   await putObject(key, Buffer.from(await file.arrayBuffer()), "image/jpeg")
-  await db.album.update({ where: { id }, data: { coverKey: key } })
-  await deleteCoverIfUnreferenced(album.coverKey)
+  await db.playlist.update({ where: { id }, data: { coverKey: key } })
+  await deleteCoverIfUnreferenced(playlist.coverKey)
 
   return Response.json({ ok: true })
 }

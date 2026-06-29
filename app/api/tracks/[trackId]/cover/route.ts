@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto"
 import type { NextRequest } from "next/server"
 import { db } from "@/lib/db"
-import { deleteObject, putObject } from "@/lib/s3"
+import { deleteCoverIfUnreferenced } from "@/lib/services/library"
+import { putObject } from "@/lib/s3"
 
 // Replace a track's cover with an uploaded image.
 export async function POST(
@@ -27,7 +28,7 @@ export async function POST(
   const key = `covers/${randomUUID()}.jpg`
   await putObject(key, Buffer.from(await file.arrayBuffer()), "image/jpeg")
   await db.track.update({ where: { id: trackId }, data: { coverKey: key } })
-  if (track.coverKey) await deleteObject(track.coverKey).catch(() => {})
+  await deleteCoverIfUnreferenced(track.coverKey)
 
   return Response.json({ ok: true })
 }

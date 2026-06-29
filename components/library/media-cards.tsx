@@ -110,7 +110,7 @@ export function PlaylistCard({
   return (
     <CardShell
       href={`/playlist/${playlist.id}`}
-      coverTrackId={playlist.coverTrackId}
+      coverSrc={`/api/playlists/${playlist.id}/cover`}
       title={playlist.name}
       subtitle={`${playlist.trackCount} ${playlist.trackCount === 1 ? "song" : "songs"}`}
     />

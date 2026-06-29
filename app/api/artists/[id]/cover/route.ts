@@ -3,7 +3,8 @@ import { GetObjectCommand } from "@aws-sdk/client-s3"
 import type { NextRequest } from "next/server"
 import { db } from "@/lib/db"
 import { env } from "@/lib/env"
-import { deleteObject, putObject, s3 } from "@/lib/s3"
+import { deleteCoverIfUnreferenced } from "@/lib/services/library"
+import { putObject, s3 } from "@/lib/s3"
 
 // Serves an artist photo same-origin: the artist's own coverKey, falling back
 // to one of its tracks' cover so cards/headers always show something.
@@ -77,7 +78,7 @@ export async function POST(
   const key = `covers/${randomUUID()}.jpg`
   await putObject(key, Buffer.from(await file.arrayBuffer()), "image/jpeg")
   await db.artist.update({ where: { id }, data: { coverKey: key } })
-  if (artist.coverKey) await deleteObject(artist.coverKey).catch(() => {})
+  await deleteCoverIfUnreferenced(artist.coverKey)
 
   return Response.json({ ok: true })
 }

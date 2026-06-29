@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { db } from "@/lib/db"
 import { deleteObject, putObject } from "@/lib/s3"
-import { upsertAlbum, upsertArtist } from "@/lib/services/library"
+import {
+  deleteCoverIfUnreferenced,
+  upsertAlbum,
+  upsertArtist,
+} from "@/lib/services/library"
 import { fetchCoverArt, lookupRecording } from "@/lib/services/metadata"
 import { albumSlug, normalizeKey } from "@/lib/slug"
 
@@ -37,6 +41,29 @@ export async function renamePlaylist(id: string, name: string) {
   await db.playlist.update({ where: { id }, data: { name: clean.data } })
   revalidatePath(`/playlist/${id}`)
   revalidatePath("/")
+}
+
+const updatePlaylistSchema = z.object({
+  name: z.string().min(1).max(120),
+  description: z.string().max(2000).optional(),
+})
+
+export async function updatePlaylist(
+  id: string,
+  input: z.input<typeof updatePlaylistSchema>,
+) {
+  const parsed = updatePlaylistSchema.safeParse(input)
+  if (!parsed.success) return { error: "Please check the fields." }
+  await db.playlist.update({
+    where: { id },
+    data: {
+      name: parsed.data.name,
+      description: parsed.data.description ?? null,
+    },
+  })
+  revalidatePath(`/playlist/${id}`)
+  revalidatePath("/")
+  return { ok: true }
 }
 
 export async function deletePlaylist(id: string) {
@@ -267,8 +294,11 @@ export async function deleteTrack(trackId: string) {
   })
   if (!track) return
   await db.track.delete({ where: { id: trackId } })
-  for (const key of [track.mp3Key, track.originalKey, track.coverKey]) {
+  for (const key of [track.mp3Key, track.originalKey]) {
     if (key) await deleteObject(key).catch(() => {})
   }
+  // Cover may be shared with an album/artist (older imports) — only delete it
+  // if nothing else references it.
+  await deleteCoverIfUnreferenced(track.coverKey)
   revalidatePath("/")
 }

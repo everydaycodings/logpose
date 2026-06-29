@@ -261,6 +261,20 @@ export async function getArtistEditData(id: string) {
   return { id: artist.id, name: artist.name, hasCover: Boolean(artist.coverKey) }
 }
 
+export async function getPlaylistEditData(id: string) {
+  const playlist = await db.playlist.findUnique({
+    where: { id },
+    select: { id: true, name: true, description: true, coverKey: true },
+  })
+  if (!playlist) return null
+  return {
+    id: playlist.id,
+    name: playlist.name,
+    description: playlist.description ?? "",
+    hasCover: Boolean(playlist.coverKey),
+  }
+}
+
 export async function getAlbumEditData(id: string) {
   const album = await db.album.findUnique({
     where: { id },
