@@ -69,6 +69,20 @@ export async function ytDownload(
   }
 }
 
+/** Expand a YouTube playlist URL into individual video watch URLs. */
+export async function ytPlaylistEntries(url: string): Promise<string[]> {
+  const { stdout } = await exec(
+    "yt-dlp",
+    ["--flat-playlist", "--print", "%(id)s", url],
+    { maxBuffer: 1024 * 1024 * 16 },
+  )
+  return stdout
+    .split("\n")
+    .map((id) => id.trim())
+    .filter(Boolean)
+    .map((id) => `https://www.youtube.com/watch?v=${id}`)
+}
+
 /** Transcode any input to a browser-friendly MP3 (VBR ~190kbps). */
 export async function transcodeToMp3(input: string, output: string) {
   await exec(

@@ -6,6 +6,16 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`
 }
 
+/** Format a duration as a friendly "Xh Ym" / "Xm" / "Xs". */
+export function formatDuration(ms: number): string {
+  const totalMin = Math.round(ms / 60000)
+  if (totalMin < 1) return `${Math.round(ms / 1000)}s`
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
+}
+
 /** Format milliseconds as m:ss (or h:mm:ss). */
 export function formatTime(ms: number | null | undefined): string {
   if (!ms || !Number.isFinite(ms) || ms < 0) return "0:00"

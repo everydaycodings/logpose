@@ -1,11 +1,39 @@
 import { z } from "zod"
 import { env } from "@/lib/env"
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit"
-import { createYoutubeImport } from "@/lib/services/imports"
+import {
+  createYoutubeImport,
+  createYoutubePlaylistImport,
+} from "@/lib/services/imports"
 
-const bodySchema = z.object({ url: z.url() })
+// Accepts a single { url } or { urls: string[] } (batch). Playlist URLs are
+// expanded by the worker into per-video jobs.
+const bodySchema = z.object({
+  url: z.string().optional(),
+  urls: z.array(z.string()).optional(),
+})
 
-const YT_HOSTS = ["youtube.com", "www.youtube.com", "youtu.be", "music.youtube.com", "m.youtube.com"]
+const YT_HOSTS = [
+  "youtube.com",
+  "www.youtube.com",
+  "youtu.be",
+  "music.youtube.com",
+  "m.youtube.com",
+]
+
+function classify(raw: string): "video" | "playlist" | null {
+  let u: URL
+  try {
+    u = new URL(raw.trim())
+  } catch {
+    return null
+  }
+  if (!YT_HOSTS.includes(u.hostname)) return null
+  // A bare playlist (list= but no v=) or /playlist path.
+  if (u.pathname.startsWith("/playlist")) return "playlist"
+  if (u.searchParams.has("list") && !u.searchParams.has("v")) return "playlist"
+  return "video"
+}
 
 export async function POST(request: Request) {
   const limit = await rateLimit(
@@ -21,19 +49,35 @@ export async function POST(request: Request) {
     return Response.json({ error: "Enter a valid URL." }, { status: 400 })
   }
 
-  let host: string
-  try {
-    host = new URL(parsed.data.url).hostname
-  } catch {
-    return Response.json({ error: "Enter a valid URL." }, { status: 400 })
+  const raw = [
+    ...(parsed.data.urls ?? []),
+    ...(parsed.data.url ? [parsed.data.url] : []),
+  ]
+    .flatMap((s) => s.split(/[\n,]/))
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+  if (raw.length === 0) {
+    return Response.json({ error: "Enter at least one URL." }, { status: 400 })
   }
-  if (!YT_HOSTS.includes(host)) {
+
+  let queued = 0
+  for (const url of raw) {
+    const kind = classify(url)
+    if (kind === "playlist") {
+      await createYoutubePlaylistImport(url)
+      queued++
+    } else if (kind === "video") {
+      await createYoutubeImport(url)
+      queued++
+    }
+  }
+
+  if (queued === 0) {
     return Response.json(
-      { error: "Only YouTube links are supported." },
+      { error: "No valid YouTube links found." },
       { status: 400 },
     )
   }
-
-  const job = await createYoutubeImport(parsed.data.url)
-  return Response.json({ id: job.id }, { status: 202 })
+  return Response.json({ queued }, { status: 202 })
 }

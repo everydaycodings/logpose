@@ -1,11 +1,11 @@
 "use client"
 
 import {
+  ChartBar,
   GearSix,
   Heart,
   House,
   MagnifyingGlass,
-  Plus,
   SignOut,
   UploadSimple,
 } from "@phosphor-icons/react"
@@ -13,7 +13,8 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { JollySeal } from "@/components/brand/jolly-seal"
 import { ThemeSwitcher } from "@/components/theme/theme-switcher"
-import { createPlaylist } from "@/lib/actions"
+import { CreatePlaylistDialog } from "@/components/playlists/create-playlist-dialog"
+import { SMART_MIXES, SMART_KEYS } from "@/lib/smart"
 import { cn } from "@/lib/utils"
 
 const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Jolly"
@@ -38,6 +39,9 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
         <NavLink href="/liked" icon={<Heart className="size-5" />}>
           Liked
         </NavLink>
+        <NavLink href="/stats" icon={<ChartBar className="size-5" />}>
+          Stats
+        </NavLink>
         <NavLink href="/import" icon={<UploadSimple className="size-5" />}>
           Add music
         </NavLink>
@@ -47,11 +51,24 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
+        <div className="px-2 py-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Mixes
+          </span>
+        </div>
+        <div className="mb-2 flex flex-col">
+          {SMART_KEYS.map((key) => (
+            <NavLink key={key} href={`/smart/${key}`} subtle>
+              {SMART_MIXES[key].title}
+            </NavLink>
+          ))}
+        </div>
+
         <div className="flex items-center justify-between px-2 py-1">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Playlists
           </span>
-          <CreatePlaylistButton />
+          <CreatePlaylistDialog />
         </div>
         <ul className="flex-1 overflow-y-auto">
           {playlists.map((p) => (
@@ -104,28 +121,6 @@ function NavLink({
       {icon}
       <span className="truncate">{children}</span>
     </Link>
-  )
-}
-
-function CreatePlaylistButton() {
-  const router = useRouter()
-  return (
-    <button
-      type="button"
-      aria-label="New playlist"
-      onClick={async () => {
-        const name = window.prompt("New playlist name")
-        if (!name) return
-        const id = await createPlaylist(name)
-        if (id) {
-          router.push(`/playlist/${id}`)
-          router.refresh()
-        }
-      }}
-      className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-    >
-      <Plus className="size-4" />
-    </button>
   )
 }
 

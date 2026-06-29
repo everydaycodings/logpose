@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react"
 import { audioGraph } from "@/lib/player/audio-graph"
 import { coverUrl, streamUrl } from "@/lib/types"
-import { current, nextTrack, usePlayer } from "@/store/player"
+import { current, EQ_BANDS, nextTrack, usePlayer } from "@/store/player"
 
 /**
  * Headless audio engine. Renders two hidden <audio> elements and drives them
@@ -17,6 +17,7 @@ export function PlayerEngine() {
   const ctxRef = useRef<AudioContext | null>(null)
   const gainsRef = useRef<GainNode[]>([])
   const masterRef = useRef<GainNode | null>(null)
+  const eqRef = useRef<BiquadFilterNode[]>([])
   const activeRef = useRef(0)
   const loadedIdRef = useRef<string | null>(null)
   const crossfadingRef = useRef(false)
@@ -33,8 +34,25 @@ export function PlayerEngine() {
     const master = ctx.createGain()
     const analyser = ctx.createAnalyser()
     analyser.fftSize = 256
-    master.connect(analyser)
+
+    // EQ chain: master -> [peaking filters] -> analyser -> destination.
+    const { eq, eqEnabled } = usePlayer.getState()
+    const filters = EQ_BANDS.map((freq, i) => {
+      const f = ctx.createBiquadFilter()
+      f.type = "peaking"
+      f.frequency.value = freq
+      f.Q.value = 1
+      f.gain.value = eqEnabled ? (eq[i] ?? 0) : 0
+      return f
+    })
+    let node: AudioNode = master
+    for (const f of filters) {
+      node.connect(f)
+      node = f
+    }
+    node.connect(analyser)
     analyser.connect(ctx.destination)
+
     const gains = els.current.map((el) => {
       const src = ctx.createMediaElementSource(el!)
       const gain = ctx.createGain()
@@ -45,6 +63,7 @@ export function PlayerEngine() {
     ctxRef.current = ctx
     masterRef.current = master
     gainsRef.current = gains
+    eqRef.current = filters
     audioGraph.analyser = analyser
   }
 
@@ -116,6 +135,38 @@ export function PlayerEngine() {
       m.gain.setTargetAtTime(muted ? 0 : volume, ctxRef.current.currentTime, 0.02)
     }
   }, [volume, muted])
+
+  // --- Equalizer ---
+  const eq = usePlayer((s) => s.eq)
+  const eqEnabled = usePlayer((s) => s.eqEnabled)
+  useEffect(() => {
+    const ctx = ctxRef.current
+    if (!ctx) return
+    eqRef.current.forEach((f, i) => {
+      f.gain.setTargetAtTime(
+        eqEnabled ? (eq[i] ?? 0) : 0,
+        ctx.currentTime,
+        0.05,
+      )
+    })
+  }, [eq, eqEnabled])
+
+  // --- Sleep timer (timed) ---
+  const sleepAt = usePlayer((s) => s.sleepAt)
+  useEffect(() => {
+    if (sleepAt == null) return
+    const ms = sleepAt - Date.now()
+    if (ms <= 0) {
+      usePlayer.getState().setPlaying(false)
+      usePlayer.setState({ sleepAt: null })
+      return
+    }
+    const t = setTimeout(() => {
+      usePlayer.getState().setPlaying(false)
+      usePlayer.setState({ sleepAt: null })
+    }, ms)
+    return () => clearTimeout(t)
+  }, [sleepAt])
 
   // --- Seek requests ---
   const seekTarget = usePlayer((s) => s.seekTarget)

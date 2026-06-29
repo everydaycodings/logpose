@@ -39,6 +39,10 @@ const schema = z.object({
   MUSICBRAINZ_USER_AGENT: z
     .string()
     .default("Jolly/0.1 (personal-music-app)"),
+
+  // Last.fm scrobbling (optional — dormant unless both are set).
+  LASTFM_API_KEY: z.string().optional(),
+  LASTFM_API_SECRET: z.string().optional(),
 })
 
 function loadEnv() {

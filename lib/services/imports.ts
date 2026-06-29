@@ -10,6 +10,14 @@ export async function createYoutubeImport(url: string) {
   return job
 }
 
+export async function createYoutubePlaylistImport(url: string) {
+  const job = await db.importJob.create({
+    data: { type: "YOUTUBE_PLAYLIST", sourceUrl: url, status: "QUEUED" },
+  })
+  await enqueueImport(job.id)
+  return job
+}
+
 export async function createUploadImport(filename: string, uploadKey: string) {
   const job = await db.importJob.create({
     data: { type: "UPLOAD", filename, uploadKey, status: "QUEUED" },

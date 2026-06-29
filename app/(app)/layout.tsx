@@ -1,9 +1,11 @@
 import { MobileHeader } from "@/components/layout/mobile-header"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { Sidebar } from "@/components/layout/sidebar"
+import { KeyboardShortcuts } from "@/components/player/keyboard-shortcuts"
 import { PlayerBar } from "@/components/player/player-bar"
 import { PlayerEngine } from "@/components/player/player-engine"
 import { ServiceWorkerRegister } from "@/components/pwa/sw-register"
+import { DialogHost } from "@/components/ui/dialog-host"
 import { getPlaylists } from "@/lib/services/queries"
 
 // The library changes whenever music is imported, so always render fresh
@@ -33,6 +35,8 @@ export default async function AppLayout({
       <PlayerBar />
       <MobileNav />
       <PlayerEngine />
+      <KeyboardShortcuts />
+      <DialogHost />
       <ServiceWorkerRegister />
     </div>
   )

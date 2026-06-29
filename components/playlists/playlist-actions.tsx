@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { deletePlaylist, renamePlaylist } from "@/lib/actions"
+import { confirm, promptDialog } from "@/lib/dialog"
 
 export function PlaylistActions({
   id,
@@ -33,7 +34,12 @@ export function PlaylistActions({
       <DropdownMenuContent align="start" className="w-44">
         <DropdownMenuItem
           onSelect={async () => {
-            const next = window.prompt("Rename playlist", name)
+            const next = await promptDialog({
+              title: "Rename playlist",
+              label: "Playlist name",
+              defaultValue: name,
+              confirmLabel: "Rename",
+            })
             if (!next) return
             await renamePlaylist(id, next)
             router.refresh()
@@ -44,7 +50,13 @@ export function PlaylistActions({
         <DropdownMenuItem
           variant="destructive"
           onSelect={async () => {
-            if (!window.confirm(`Delete playlist "${name}"?`)) return
+            const ok = await confirm({
+              title: "Delete playlist?",
+              description: `"${name}" will be removed. Your songs stay in your library.`,
+              confirmLabel: "Delete",
+              destructive: true,
+            })
+            if (!ok) return
             await deletePlaylist(id)
             toast.success("Playlist deleted")
             router.push("/")

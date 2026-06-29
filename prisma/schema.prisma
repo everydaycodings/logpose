@@ -17,6 +17,9 @@ enum TrackSource {
 enum ImportType {
   UPLOAD
   YOUTUBE
+  YOUTUBE_PLAYLIST
+  REENRICH
+  RESTORE
 }
 
 enum ImportStatus {
@@ -64,8 +67,9 @@ model Track {
   durationMs  Int?
   year        Int?
   genre       String?
-  lyrics      String?     @db.Text
-  source      TrackSource
+  lyrics       String? @db.Text
+  syncedLyrics String? @db.Text // LRC format from lrclib.net
+  source       TrackSource
   sourceUrl   String?
   mbid        String?
 
@@ -85,6 +89,7 @@ model Track {
   album    Album?  @relation(fields: [albumId], references: [id], onDelete: SetNull)
 
   playlistEntries PlaylistTrack[]
+  playEvents      PlayEvent[]
 
   @@index([artistId])
   @@index([albumId])
@@ -113,6 +118,27 @@ model PlaylistTrack {
 
   @@unique([playlistId, trackId])
   @@index([playlistId, position])
+}
+
+// One row per play (recorded when a track starts). Powers listening history,
+// "on this day", total listening time, and the stats dashboard.
+model PlayEvent {
+  id       String   @id @default(cuid())
+  trackId  String
+  playedAt DateTime @default(now())
+  // Snapshot of duration so stats survive track deletion.
+  durationMs Int?
+
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([playedAt])
+  @@index([trackId])
+}
+
+// Generic key/value store for app settings (e.g. Last.fm session key).
+model Setting {
+  key   String @id
+  value String
 }
 
 model ImportJob {

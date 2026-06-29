@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { updateTrack } from "@/lib/actions"
+import { reenrichTrack, updateTrack } from "@/lib/actions"
 
 type Data = {
   id: string
@@ -26,6 +26,7 @@ export function EditForm({ data }: { data: Data }) {
   const [form, setForm] = useState(data)
   const [saving, setSaving] = useState(false)
   const [coverBust, setCoverBust] = useState(0)
+  const [refetching, setRefetching] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   function set<K extends keyof Data>(key: K, value: Data[K]) {
@@ -138,9 +139,28 @@ export function EditForm({ data }: { data: Data }) {
             placeholder="Paste lyrics here…"
           />
         </Field>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button type="submit" disabled={saving}>
             {saving ? "Saving…" : "Save changes"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={refetching}
+            onClick={async () => {
+              setRefetching(true)
+              const res = await reenrichTrack(data.id)
+              setRefetching(false)
+              if (res?.ok) {
+                toast.success("Metadata refreshed")
+                setCoverBust((n) => n + 1)
+                router.refresh()
+              } else {
+                toast.error(res?.error ?? "Could not refresh")
+              }
+            }}
+          >
+            {refetching ? "Searching…" : "Re-fetch metadata"}
           </Button>
           <Button type="button" variant="ghost" onClick={() => router.back()}>
             Cancel

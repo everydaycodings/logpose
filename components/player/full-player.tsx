@@ -12,9 +12,13 @@ import {
 } from "@phosphor-icons/react"
 import { useEffect, useState } from "react"
 import { JollySeal } from "@/components/brand/jolly-seal"
+import { Equalizer } from "@/components/player/equalizer"
+import { LyricsView } from "@/components/player/lyrics-view"
+import { SleepTimer } from "@/components/player/sleep-timer"
 import { Visualizer } from "@/components/player/visualizer"
 import { Slider } from "@/components/ui/slider"
 import { formatTime } from "@/lib/format"
+import { useAlbumColor } from "@/lib/player/use-album-color"
 import { cn } from "@/lib/utils"
 import { current, usePlayer } from "@/store/player"
 
@@ -36,18 +40,13 @@ export function FullPlayer() {
   const crossfadeSec = usePlayer((s) => s.crossfadeSec)
   const setCrossfade = usePlayer((s) => s.setCrossfade)
 
-  const [lyrics, setLyrics] = useState<string | null>(null)
   const [showLyrics, setShowLyrics] = useState(false)
+  const accent = useAlbumColor(track?.id, track?.hasCover ?? false)
 
+  // Reset the lyrics toggle when the track changes.
   useEffect(() => {
-    if (!track) return
-    setLyrics(null)
     setShowLyrics(false)
-    fetch(`/api/tracks/${track.id}/lyrics`)
-      .then((r) => r.json())
-      .then((d) => setLyrics(d.lyrics))
-      .catch(() => {})
-  }, [track?.id, track])
+  }, [track?.id])
 
   // Close on Escape.
   useEffect(() => {
@@ -67,7 +66,15 @@ export function FullPlayer() {
       )}
       aria-hidden={!expanded}
     >
-      <div className="flex items-center justify-between p-4">
+      {/* Dynamic accent pulled from the album art. */}
+      {accent && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-25 transition-opacity duration-700"
+          style={{ background: `linear-gradient(180deg, ${accent}, transparent 55%)` }}
+        />
+      )}
+      <div className="relative flex items-center justify-between p-4">
         <button
           type="button"
           onClick={() => setExpanded(false)}
@@ -79,24 +86,27 @@ export function FullPlayer() {
         <span className="font-heading text-xl text-muted-foreground">
           Now Playing
         </span>
-        <button
-          type="button"
-          onClick={() => setShowLyrics((v) => !v)}
-          aria-pressed={showLyrics}
-          className={cn(
-            "rounded-full px-3 py-1.5 text-sm hover:bg-accent",
-            showLyrics ? "text-seal" : "text-muted-foreground",
-            !lyrics && "invisible",
-          )}
-        >
-          Lyrics
-        </button>
+        <div className="flex items-center gap-1">
+          <SleepTimer />
+          <Equalizer />
+          <button
+            type="button"
+            onClick={() => setShowLyrics((v) => !v)}
+            aria-pressed={showLyrics}
+            className={cn(
+              "rounded-full px-3 py-1.5 text-sm hover:bg-accent",
+              showLyrics ? "text-seal" : "text-muted-foreground",
+            )}
+          >
+            Lyrics
+          </button>
+        </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-6 overflow-hidden p-6">
-        {showLyrics && lyrics ? (
-          <div className="h-full w-full overflow-y-auto whitespace-pre-wrap text-center text-lg leading-relaxed text-foreground/90">
-            {lyrics}
+      <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-6 overflow-hidden p-6">
+        {showLyrics ? (
+          <div className="h-full max-h-[55vh] w-full">
+            <LyricsView trackId={track.id} />
           </div>
         ) : (
           <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-muted shadow-xl">

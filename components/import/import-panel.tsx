@@ -10,8 +10,8 @@ import {
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
 type Job = {
@@ -107,19 +107,18 @@ export function ImportPanel() {
             <h2 className="font-heading text-2xl">From a link</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Paste a YouTube link. We’ll pull the audio, cover art, and details.
+            Paste a YouTube link, a whole playlist, or many links (one per line).
           </p>
-          <div className="flex gap-2">
-            <Input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://youtube.com/watch?v=…"
-              aria-label="YouTube URL"
-            />
-            <Button type="submit" disabled={busy || !url.trim()}>
-              Add
-            </Button>
-          </div>
+          <Textarea
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder={"https://youtube.com/watch?v=…\nhttps://youtube.com/playlist?list=…"}
+            aria-label="YouTube URLs"
+            rows={3}
+          />
+          <Button type="submit" disabled={busy || !url.trim()} className="self-end">
+            Add
+          </Button>
         </form>
 
         {/* Upload */}

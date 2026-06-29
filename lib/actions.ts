@@ -1,9 +1,12 @@
 "use server"
 
+import { randomUUID } from "node:crypto"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { db } from "@/lib/db"
-import { deleteObject } from "@/lib/s3"
+import { deleteObject, putObject } from "@/lib/s3"
+import { upsertAlbum, upsertArtist } from "@/lib/services/library"
+import { fetchCoverArt, lookupRecording } from "@/lib/services/metadata"
 import { albumSlug, normalizeKey } from "@/lib/slug"
 
 export async function toggleLike(trackId: string) {
@@ -130,6 +133,70 @@ export async function updateTrack(
   revalidatePath(`/track/${trackId}/edit`)
   revalidatePath("/")
   return { ok: true }
+}
+
+/** Re-run MusicBrainz/Cover Art lookup and update the track. */
+export async function reenrichTrack(trackId: string) {
+  const track = await db.track.findUnique({
+    where: { id: trackId },
+    include: { artist: { select: { name: true } } },
+  })
+  if (!track) return { error: "Track not found." }
+
+  const enriched = await lookupRecording(
+    track.title,
+    track.artist?.name ?? undefined,
+  )
+  if (!enriched) return { error: "No match found on MusicBrainz." }
+
+  const artistName = enriched.artist ?? track.artist?.name
+  let artistId = track.artistId
+  let albumId = track.albumId
+  if (artistName) {
+    const artist = await upsertArtist(artistName)
+    artistId = artist.id
+    if (enriched.album) {
+      const album = await upsertAlbum({
+        title: enriched.album,
+        artistId: artist.id,
+        artistName,
+        year: enriched.year,
+        mbid: enriched.mbid,
+      })
+      albumId = album.id
+    }
+  }
+
+  let coverKey = track.coverKey
+  if (!coverKey && enriched.releaseMbid) {
+    const cover = await fetchCoverArt(enriched.releaseMbid)
+    if (cover) {
+      coverKey = `covers/${randomUUID()}.jpg`
+      await putObject(coverKey, cover, "image/jpeg")
+    }
+  }
+
+  await db.track.update({
+    where: { id: trackId },
+    data: {
+      year: enriched.year ?? track.year,
+      mbid: enriched.mbid ?? track.mbid,
+      artistId,
+      albumId,
+      coverKey,
+    },
+  })
+  revalidatePath(`/track/${trackId}/edit`)
+  revalidatePath("/")
+  return { ok: true }
+}
+
+export async function deleteOrphans() {
+  const { findOrphans } = await import("@/lib/services/maintenance")
+  const { keys } = await findOrphans()
+  for (const key of keys) await deleteObject(key).catch(() => {})
+  revalidatePath("/settings")
+  return { deleted: keys.length }
 }
 
 export async function deleteTrack(trackId: string) {

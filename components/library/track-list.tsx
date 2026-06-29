@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { deleteTrack } from "@/lib/actions"
+import { confirm } from "@/lib/dialog"
 import { formatTime } from "@/lib/format"
 import type { PlayableTrack } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -205,8 +206,13 @@ function TrackRow({
             <DropdownMenuItem
               variant="destructive"
               onSelect={async () => {
-                if (!window.confirm(`Delete "${track.title}"? This can't be undone.`))
-                  return
+                const ok = await confirm({
+                  title: "Delete track?",
+                  description: `"${track.title}" will be removed from your library and storage. This can't be undone.`,
+                  confirmLabel: "Delete",
+                  destructive: true,
+                })
+                if (!ok) return
                 await deleteTrack(track.id)
                 toast.success("Track deleted")
                 router.refresh()

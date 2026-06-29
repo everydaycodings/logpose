@@ -3,6 +3,45 @@ import type { PlayableTrack } from "@/lib/types"
 
 export type RepeatMode = "off" | "all" | "one"
 
+// Equalizer band center frequencies (Hz).
+export const EQ_BANDS = [60, 170, 350, 1000, 3500, 10000]
+
+export const EQ_PRESETS: Record<string, number[]> = {
+  Flat: [0, 0, 0, 0, 0, 0],
+  Bass: [6, 4, 2, 0, 0, 0],
+  Treble: [0, 0, 0, 2, 4, 6],
+  Vocal: [-2, 0, 3, 4, 2, 0],
+  Loudness: [5, 2, 0, 0, 2, 5],
+  "Lo-fi": [4, 2, 0, -2, -5, -8],
+}
+
+const PREFS_KEY = "jolly-prefs"
+
+type Prefs = {
+  volume: number
+  crossfadeSec: number
+  eq: number[]
+  eqEnabled: boolean
+}
+
+function loadPrefs(): Partial<Prefs> {
+  if (typeof window === "undefined") return {}
+  try {
+    return JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}")
+  } catch {
+    return {}
+  }
+}
+
+function savePrefs(p: Prefs) {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(p))
+  } catch {
+    /* ignore */
+  }
+}
+
 type PlayerState = {
   queue: PlayableTrack[]
   // Snapshot of the unshuffled order, restored when shuffle is turned off.
@@ -15,9 +54,15 @@ type PlayerState = {
   volume: number
   muted: boolean
   crossfadeSec: number
+  eq: number[]
+  eqEnabled: boolean
 
   positionMs: number
   durationMs: number
+
+  // Sleep timer: pause at a timestamp, or when the current track ends.
+  sleepAt: number | null
+  sleepEndOfTrack: boolean
 
   // Full-screen now-playing view.
   expanded: boolean
@@ -37,6 +82,11 @@ type PlayerState = {
   setVolume: (v: number) => void
   toggleMute: () => void
   setCrossfade: (sec: number) => void
+  setEqBand: (index: number, gain: number) => void
+  setEqPreset: (name: string) => void
+  toggleEq: () => void
+  setSleepTimer: (minutes: number | null) => void
+  setSleepEndOfTrack: (v: boolean) => void
   seek: (ms: number) => void
   clearSeek: () => void
   setProgress: (positionMs: number, durationMs: number) => void
@@ -67,6 +117,16 @@ export const nextTrack = (s: PlayerState): PlayableTrack | undefined => {
   return undefined
 }
 
+function persist(get: () => PlayerState) {
+  const s = get()
+  savePrefs({
+    volume: s.volume,
+    crossfadeSec: s.crossfadeSec,
+    eq: s.eq,
+    eqEnabled: s.eqEnabled,
+  })
+}
+
 export const usePlayer = create<PlayerState>((set, get) => ({
   queue: [],
   ordered: null,
@@ -74,11 +134,15 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   isPlaying: false,
   shuffle: false,
   repeat: "off",
-  volume: 1,
+  volume: loadPrefs().volume ?? 1,
   muted: false,
-  crossfadeSec: 0,
+  crossfadeSec: loadPrefs().crossfadeSec ?? 0,
+  eq: loadPrefs().eq ?? [0, 0, 0, 0, 0, 0],
+  eqEnabled: loadPrefs().eqEnabled ?? false,
   positionMs: 0,
   durationMs: 0,
+  sleepAt: null,
+  sleepEndOfTrack: false,
   expanded: false,
   seekTarget: null,
 
@@ -143,6 +207,10 @@ export const usePlayer = create<PlayerState>((set, get) => ({
 
   trackEnded: () => {
     const s = get()
+    if (s.sleepEndOfTrack) {
+      set({ isPlaying: false, sleepEndOfTrack: false })
+      return
+    }
     if (s.repeat === "one") {
       set({ seekTarget: 0, positionMs: 0, isPlaying: true })
       return
@@ -179,9 +247,38 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       repeat: s.repeat === "off" ? "all" : s.repeat === "all" ? "one" : "off",
     })),
 
-  setVolume: (v) => set({ volume: Math.min(1, Math.max(0, v)), muted: false }),
+  setVolume: (v) => {
+    const volume = Math.min(1, Math.max(0, v))
+    set({ volume, muted: false })
+    persist(get)
+  },
   toggleMute: () => set((s) => ({ muted: !s.muted })),
-  setCrossfade: (sec) => set({ crossfadeSec: Math.min(12, Math.max(0, sec)) }),
+  setCrossfade: (sec) => {
+    set({ crossfadeSec: Math.min(12, Math.max(0, sec)) })
+    persist(get)
+  },
+  setEqBand: (index, gain) => {
+    const eq = [...get().eq]
+    eq[index] = Math.max(-12, Math.min(12, gain))
+    set({ eq, eqEnabled: true })
+    persist(get)
+  },
+  setEqPreset: (name) => {
+    const preset = EQ_PRESETS[name]
+    if (!preset) return
+    set({ eq: [...preset], eqEnabled: true })
+    persist(get)
+  },
+  toggleEq: () => {
+    set((s) => ({ eqEnabled: !s.eqEnabled }))
+    persist(get)
+  },
+  setSleepTimer: (minutes) =>
+    set({
+      sleepAt: minutes == null ? null : Date.now() + minutes * 60000,
+      sleepEndOfTrack: false,
+    }),
+  setSleepEndOfTrack: (v) => set({ sleepEndOfTrack: v, sleepAt: null }),
 
   seek: (ms) => set({ seekTarget: Math.max(0, ms), positionMs: Math.max(0, ms) }),
   clearSeek: () => set({ seekTarget: null }),

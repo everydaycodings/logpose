@@ -5,10 +5,19 @@ import path from "node:path"
 import { parseFile } from "music-metadata"
 import { db } from "@/lib/db"
 import { putObject } from "@/lib/s3"
-import { setJobStatus, updateJob } from "@/lib/services/imports"
+import {
+  createYoutubeImport,
+  setJobStatus,
+  updateJob,
+} from "@/lib/services/imports"
 import { finalizeTrack } from "@/lib/services/library"
 import { fetchCoverArt, lookupRecording } from "@/lib/services/metadata"
-import { probeDurationMs, transcodeToMp3, ytDownload } from "./audio"
+import {
+  probeDurationMs,
+  transcodeToMp3,
+  ytDownload,
+  ytPlaylistEntries,
+} from "./audio"
 import { downloadToFile, uploadFile } from "./storage"
 
 const CONTENT_TYPE: Record<string, string> = {
@@ -36,6 +45,24 @@ export async function processImport(importId: string) {
   const job = await db.importJob.findUnique({ where: { id: importId } })
   if (!job) return
   if (job.status === "DONE") return
+
+  // Playlist: expand into one child job per video, then finish.
+  if (job.type === "YOUTUBE_PLAYLIST") {
+    try {
+      await setJobStatus(importId, "DOWNLOADING", 20)
+      const urls = await ytPlaylistEntries(job.sourceUrl!)
+      for (const url of urls) await createYoutubeImport(url)
+      await updateJob(importId, {
+        status: "DONE",
+        progress: 100,
+        error: `Queued ${urls.length} videos`,
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Playlist failed"
+      await updateJob(importId, { status: "FAILED", error: message.slice(0, 500) })
+    }
+    return
+  }
 
   const dir = await mkdtemp(path.join(tmpdir(), "jolly-"))
   try {
@@ -132,7 +159,7 @@ export async function processImport(importId: string) {
       genre: base.genre,
       trackNumber: base.trackNumber,
       durationMs: durationMs ?? undefined,
-      source: job.type,
+      source: job.type === "UPLOAD" ? "UPLOAD" : "YOUTUBE",
       sourceUrl: job.sourceUrl ?? undefined,
       mbid,
       originalKey,

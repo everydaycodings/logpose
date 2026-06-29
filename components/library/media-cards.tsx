@@ -67,14 +67,30 @@ export function ArtistCard({
 }: {
   artist: { id: string; name: string; trackCount: number; trackId: string | null }
 }) {
+  // A restrained "wanted poster": sepia ring + a tiny WANTED eyebrow.
   return (
-    <CardShell
+    <Link
       href={`/artist/${artist.id}`}
-      coverTrackId={artist.trackId}
-      title={artist.name}
-      subtitle={`${artist.trackCount} ${artist.trackCount === 1 ? "song" : "songs"}`}
-      round
-    />
+      className="group flex flex-col items-center gap-2 rounded-xl p-2 text-center transition-colors hover:bg-card"
+    >
+      <div className="rounded-full p-1 ring-1 ring-seal/30 transition-all group-hover:ring-2 group-hover:ring-seal/60">
+        <Cover
+          coverTrackId={artist.trackId}
+          alt={artist.name}
+          rounded="rounded-full"
+          className="shadow-sm transition-transform group-hover:-translate-y-0.5"
+        />
+      </div>
+      <div className="min-w-0 px-1">
+        <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-seal/70">
+          Wanted
+        </div>
+        <div className="truncate text-sm font-medium">{artist.name}</div>
+        <div className="truncate text-xs text-muted-foreground">
+          {artist.trackCount} {artist.trackCount === 1 ? "song" : "songs"}
+        </div>
+      </div>
+    </Link>
   )
 }
 

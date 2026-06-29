@@ -11,6 +11,7 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
 import { addTrackToPlaylist, createPlaylist } from "@/lib/actions"
+import { promptDialog } from "@/lib/dialog"
 
 type Playlist = { id: string; name: string }
 
@@ -33,7 +34,13 @@ export function AddToPlaylistSub({ trackId }: { trackId: string }) {
       <DropdownMenuSubContent>
         <DropdownMenuItem
           onSelect={async () => {
-            const name = window.prompt("New playlist name")
+            const name = await promptDialog({
+              title: "New playlist",
+              description: "Give your new collection a name.",
+              label: "Playlist name",
+              placeholder: "e.g. Grand Line favorites",
+              confirmLabel: "Create",
+            })
             if (!name) return
             const id = await createPlaylist(name)
             if (id) {

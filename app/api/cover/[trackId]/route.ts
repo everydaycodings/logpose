@@ -1,9 +1,11 @@
-import { redirect } from "next/navigation"
+import { GetObjectCommand } from "@aws-sdk/client-s3"
 import type { NextRequest } from "next/server"
 import { db } from "@/lib/db"
-import { presignGet } from "@/lib/s3"
+import { env } from "@/lib/env"
+import { s3 } from "@/lib/s3"
 
-// Redirects to a presigned cover image, falling back through track -> album.
+// Proxies cover art same-origin (so the player can sample its colors on a
+// canvas without cross-origin tainting), falling back track -> album.
 export async function GET(
   _req: NextRequest,
   ctx: RouteContext<"/api/cover/[trackId]">,
@@ -15,5 +17,21 @@ export async function GET(
   })
   const key = track?.coverKey ?? track?.album?.coverKey
   if (!key) return new Response("No cover", { status: 404 })
-  redirect(await presignGet(key))
+
+  try {
+    const res = await s3.send(
+      new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: key }),
+    )
+    const body = (
+      res.Body as { transformToWebStream: () => ReadableStream }
+    ).transformToWebStream()
+    return new Response(body, {
+      headers: {
+        "Content-Type": res.ContentType ?? "image/jpeg",
+        "Cache-Control": "private, max-age=86400",
+      },
+    })
+  } catch {
+    return new Response("No cover", { status: 404 })
+  }
 }
