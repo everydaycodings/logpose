@@ -46,6 +46,7 @@ export type FinalizeTrackInput = {
   genre?: string
   trackNumber?: number
   durationMs?: number
+  gainDb?: number
   source: TrackSource
   sourceUrl?: string
   mbid?: string
@@ -84,6 +85,7 @@ export async function finalizeTrack(input: FinalizeTrackInput) {
       title: input.title,
       trackNumber: input.trackNumber,
       durationMs: input.durationMs,
+      gainDb: input.gainDb,
       year: input.year,
       genre: input.genre,
       source: input.source,

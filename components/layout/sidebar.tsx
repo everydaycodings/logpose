@@ -2,10 +2,13 @@
 
 import {
   ChartBar,
+  Disc,
   GearSix,
   Heart,
   House,
   MagnifyingGlass,
+  MicrophoneStage,
+  MusicNotes,
   SignOut,
   UploadSimple,
 } from "@phosphor-icons/react"
@@ -35,6 +38,15 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
         </NavLink>
         <NavLink href="/search" icon={<MagnifyingGlass className="size-5" />}>
           Search
+        </NavLink>
+        <NavLink href="/songs" icon={<MusicNotes className="size-5" />}>
+          Songs
+        </NavLink>
+        <NavLink href="/albums" icon={<Disc className="size-5" />}>
+          Albums
+        </NavLink>
+        <NavLink href="/artists" icon={<MicrophoneStage className="size-5" />}>
+          Artists
         </NavLink>
         <NavLink href="/liked" icon={<Heart className="size-5" />}>
           Liked

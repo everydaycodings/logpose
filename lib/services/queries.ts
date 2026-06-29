@@ -21,6 +21,7 @@ export function toPlayable(t: TrackWithRels): PlayableTrack {
     hasCover: Boolean(t.coverKey || t.album?.coverKey),
     liked: t.liked,
     playCount: t.playCount,
+    gainDb: t.gainDb,
   }
 }
 
@@ -37,6 +38,16 @@ export async function getAllTracks(): Promise<PlayableTrack[]> {
   const rows = await db.track.findMany({
     include: trackInclude,
     orderBy: { createdAt: "desc" },
+  })
+  return rows.map(toPlayable)
+}
+
+/** A short A–Z preview of the library for the dashboard's Songs section. */
+export async function getSongsPreview(limit = 7): Promise<PlayableTrack[]> {
+  const rows = await db.track.findMany({
+    include: trackInclude,
+    orderBy: { title: "asc" },
+    take: limit,
   })
   return rows.map(toPlayable)
 }

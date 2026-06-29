@@ -13,6 +13,7 @@ import {
 import { finalizeTrack } from "@/lib/services/library"
 import { fetchCoverArt, lookupRecording } from "@/lib/services/metadata"
 import {
+  measureGainDb,
   probeDurationMs,
   transcodeToMp3,
   ytDownload,
@@ -116,6 +117,7 @@ export async function processImport(importId: string) {
     const mp3Path = path.join(dir, "playback.mp3")
     await transcodeToMp3(originalPath, mp3Path)
     const durationMs = await probeDurationMs(mp3Path)
+    const gainDb = await measureGainDb(mp3Path)
 
     // Enrich missing fields + cover from MusicBrainz / Cover Art Archive.
     await setJobStatus(importId, "FETCHING_META", 65)
@@ -159,6 +161,7 @@ export async function processImport(importId: string) {
       genre: base.genre,
       trackNumber: base.trackNumber,
       durationMs: durationMs ?? undefined,
+      gainDb: gainDb ?? undefined,
       source: job.type === "UPLOAD" ? "UPLOAD" : "YOUTUBE",
       sourceUrl: job.sourceUrl ?? undefined,
       mbid,

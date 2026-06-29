@@ -10,6 +10,8 @@ export type PlayableTrack = {
   hasCover: boolean
   liked: boolean
   playCount?: number
+  /** ReplayGain adjustment in dB, applied by the player. */
+  gainDb?: number | null
 }
 
 export const coverUrl = (trackId: string) => `/api/cover/${trackId}`

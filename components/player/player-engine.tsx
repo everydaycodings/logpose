@@ -126,15 +126,23 @@ export function PlayerEngine() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, cur?.id])
 
-  // --- Volume / mute ---
+  // --- Volume / mute / ReplayGain ---
+  // The current track's ReplayGain (dB) folds into the master so loudness is
+  // consistent across imports. Boost is capped at +6 dB to stay click-safe.
   const volume = usePlayer((s) => s.volume)
   const muted = usePlayer((s) => s.muted)
   useEffect(() => {
     const m = masterRef.current
     if (m && ctxRef.current) {
-      m.gain.setTargetAtTime(muted ? 0 : volume, ctxRef.current.currentTime, 0.02)
+      const db = Math.min(cur?.gainDb ?? 0, 6)
+      const rg = 10 ** (db / 20)
+      m.gain.setTargetAtTime(
+        muted ? 0 : volume * rg,
+        ctxRef.current.currentTime,
+        0.02,
+      )
     }
-  }, [volume, muted])
+  }, [volume, muted, cur?.gainDb])
 
   // --- Equalizer ---
   const eq = usePlayer((s) => s.eq)
@@ -176,6 +184,12 @@ export function PlayerEngine() {
     const el = activeEl()
     if (Number.isFinite(el.duration)) el.currentTime = seekTarget / 1000
     crossfadingRef.current = false
+    // A seek can also be a "restart this track" signal (e.g. repeat-one or a
+    // single-track loop), where the element ended and is paused — resume it.
+    if (usePlayer.getState().isPlaying) {
+      void ctxRef.current?.resume()
+      void el.play().catch(() => {})
+    }
     clearSeek()
   }, [seekTarget, clearSeek])
 

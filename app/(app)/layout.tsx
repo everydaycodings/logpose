@@ -1,6 +1,7 @@
 import { MobileHeader } from "@/components/layout/mobile-header"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { Sidebar } from "@/components/layout/sidebar"
+import { CommandPalette } from "@/components/player/command-palette"
 import { KeyboardShortcuts } from "@/components/player/keyboard-shortcuts"
 import { PlayerBar } from "@/components/player/player-bar"
 import { PlayerEngine } from "@/components/player/player-engine"
@@ -36,6 +37,7 @@ export default async function AppLayout({
       <MobileNav />
       <PlayerEngine />
       <KeyboardShortcuts />
+      <CommandPalette />
       <DialogHost />
       <ServiceWorkerRegister />
     </div>

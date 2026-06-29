@@ -102,6 +102,39 @@ export async function transcodeToMp3(input: string, output: string) {
   )
 }
 
+/**
+ * Measure ReplayGain as a dB adjustment toward a -14 LUFS target (EBU R128),
+ * using ffmpeg's loudnorm analysis pass. Returns null if it can't be measured.
+ * The value is clamped to ±15 dB to avoid extreme swings on odd inputs.
+ */
+export async function measureGainDb(file: string): Promise<number | null> {
+  const TARGET_LUFS = -14
+  try {
+    const { stderr } = await exec(
+      "ffmpeg",
+      [
+        "-i",
+        file,
+        "-af",
+        "loudnorm=I=-14:print_format=json",
+        "-f",
+        "null",
+        "-",
+      ],
+      { maxBuffer: 1024 * 1024 * 16 },
+    )
+    // The JSON block is the last {...} ffmpeg prints to stderr.
+    const match = stderr.match(/\{[^{}]*"input_i"[^{}]*\}/)
+    if (!match) return null
+    const measuredI = Number(JSON.parse(match[0]).input_i)
+    if (!Number.isFinite(measuredI)) return null
+    const gain = TARGET_LUFS - measuredI
+    return Math.max(-15, Math.min(15, Math.round(gain * 100) / 100))
+  } catch {
+    return null
+  }
+}
+
 /** Probe duration in milliseconds via ffprobe; null if it can't be read. */
 export async function probeDurationMs(file: string): Promise<number | null> {
   try {

@@ -16,6 +16,7 @@ export const EQ_PRESETS: Record<string, number[]> = {
 }
 
 const PREFS_KEY = "logpose-prefs"
+const SESSION_KEY = "logpose-session"
 
 type Prefs = {
   volume: number
@@ -37,6 +38,34 @@ function savePrefs(p: Prefs) {
   if (typeof window === "undefined") return
   try {
     localStorage.setItem(PREFS_KEY, JSON.stringify(p))
+  } catch {
+    /* ignore */
+  }
+}
+
+// The queue/up-next so a page reload doesn't lose what you were listening to.
+// Restored paused, at the start of the track that was current.
+type Session = {
+  queue: PlayableTrack[]
+  ordered: PlayableTrack[] | null
+  index: number
+  shuffle: boolean
+  repeat: RepeatMode
+}
+
+function loadSession(): Partial<Session> {
+  if (typeof window === "undefined") return {}
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY) ?? "{}")
+  } catch {
+    return {}
+  }
+}
+
+function saveSession(s: Session) {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s))
   } catch {
     /* ignore */
   }
@@ -127,13 +156,15 @@ function persist(get: () => PlayerState) {
   })
 }
 
+const session = loadSession()
+
 export const usePlayer = create<PlayerState>((set, get) => ({
-  queue: [],
-  ordered: null,
-  index: 0,
+  queue: session.queue ?? [],
+  ordered: session.ordered ?? null,
+  index: session.index ?? 0,
   isPlaying: false,
-  shuffle: false,
-  repeat: "off",
+  shuffle: session.shuffle ?? false,
+  repeat: session.repeat ?? "off",
   volume: loadPrefs().volume ?? 1,
   muted: false,
   crossfadeSec: loadPrefs().crossfadeSec ?? 0,
@@ -183,7 +214,13 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     if (ni < s.queue.length) {
       set({ index: ni, positionMs: 0, isPlaying: true })
     } else if (s.repeat === "all") {
-      set({ index: 0, positionMs: 0, isPlaying: true })
+      // Wrapping to a different track changes the loaded id (engine reloads);
+      // a single-track queue stays on the same id, so restart it in place.
+      if (s.index === 0) {
+        set({ seekTarget: 0, positionMs: 0, isPlaying: true })
+      } else {
+        set({ index: 0, positionMs: 0, isPlaying: true })
+      }
     } else {
       set({ isPlaying: false, positionMs: 0 })
     }
@@ -322,3 +359,30 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     set({ index, positionMs: 0, isPlaying: true })
   },
 }))
+
+// Persist the queue/up-next across reloads. Only writes when the queue or its
+// ordering actually changes — not on every progress tick.
+let lastSnap: Pick<
+  PlayerState,
+  "queue" | "ordered" | "index" | "shuffle" | "repeat"
+> | null = null
+usePlayer.subscribe((s) => {
+  if (
+    lastSnap &&
+    s.queue === lastSnap.queue &&
+    s.ordered === lastSnap.ordered &&
+    s.index === lastSnap.index &&
+    s.shuffle === lastSnap.shuffle &&
+    s.repeat === lastSnap.repeat
+  ) {
+    return
+  }
+  lastSnap = {
+    queue: s.queue,
+    ordered: s.ordered,
+    index: s.index,
+    shuffle: s.shuffle,
+    repeat: s.repeat,
+  }
+  saveSession(lastSnap)
+})

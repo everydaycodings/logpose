@@ -12,6 +12,7 @@ import { toggleLike } from "@/lib/actions"
 import { current, usePlayer } from "@/store/player"
 
 const SHORTCUTS: [string, string][] = [
+  ["⌘ / Ctrl + K", "Quick search"],
   ["Space", "Play / pause"],
   ["← / →", "Seek 5s back / forward"],
   ["Shift + ← / →", "Previous / next track"],

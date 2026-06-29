@@ -64,6 +64,7 @@ model Track {
   id          String      @id @default(cuid())
   title       String
   trackNumber Int?
+  discNumber  Int?
   durationMs  Int?
   year        Int?
   genre       String?
@@ -77,6 +78,10 @@ model Track {
   originalKey String? // original uploaded/downloaded file
   mp3Key      String? // browser-friendly transcode used for playback
   coverKey    String?
+
+  // ReplayGain: dB adjustment to reach a consistent loudness (EBU R128, -14
+  // LUFS target). Measured on import; applied as a gain in the player.
+  gainDb Float?
 
   liked        Boolean   @default(false)
   playCount    Int       @default(0)

@@ -4,14 +4,17 @@ import { TrackList } from "@/components/library/track-list"
 import { Section } from "@/components/layout/section"
 import { EmptyState } from "@/components/library/empty-state"
 import { formatDuration } from "@/lib/format"
+import { getLeastPlayed, getMostPlayed } from "@/lib/services/queries"
 import { getListeningStats, getOnThisDay } from "@/lib/services/stats"
 
 export const metadata: Metadata = { title: "Stats" }
 
 export default async function StatsPage() {
-  const [stats, onThisDay] = await Promise.all([
+  const [stats, onThisDay, mostPlayed, leastPlayed] = await Promise.all([
     getListeningStats(),
     getOnThisDay(),
+    getMostPlayed(6),
+    getLeastPlayed(6),
   ])
 
   if (stats.totalPlays === 0) {
@@ -83,6 +86,25 @@ export default async function StatsPage() {
             <TrackList tracks={stats.topTracks} numbered showPlayCount />
           </div>
         </Section>
+      )}
+
+      {(mostPlayed.length > 0 || leastPlayed.length > 0) && (
+        <div className="grid gap-x-8 md:grid-cols-2">
+          {mostPlayed.length > 0 && (
+            <Section title="On repeat">
+              <div className="rounded-2xl bg-card/50 p-2">
+                <TrackList tracks={mostPlayed} showPlayCount showCover={false} />
+              </div>
+            </Section>
+          )}
+          {leastPlayed.length > 0 && (
+            <Section title="Hidden gems">
+              <div className="rounded-2xl bg-card/50 p-2">
+                <TrackList tracks={leastPlayed} showPlayCount showCover={false} />
+              </div>
+            </Section>
+          )}
+        </div>
       )}
 
       {onThisDay.length > 0 && (

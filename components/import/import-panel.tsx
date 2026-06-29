@@ -34,11 +34,19 @@ const STATUS_LABEL: Record<Job["status"], string> = {
   FAILED: "Failed",
 }
 
+const AUDIO_EXT = [
+  ".mp3", ".m4a", ".aac", ".flac", ".wav", ".ogg", ".opus", ".webm", ".aiff",
+]
+const isAudioFile = (f: File) =>
+  f.type.startsWith("audio/") ||
+  AUDIO_EXT.some((ext) => f.name.toLowerCase().endsWith(ext))
+
 export function ImportPanel() {
   const [url, setUrl] = useState("")
   const [busy, setBusy] = useState(false)
   const [jobs, setJobs] = useState<Job[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
+  const folderRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
 
   // Poll job status.
@@ -91,8 +99,12 @@ export function ImportPanel() {
   }
 
   async function uploadFiles(files: FileList | File[]) {
-    const list = Array.from(files)
-    if (list.length === 0) return
+    // A folder/drop can include non-audio files — keep only what we can import.
+    const list = Array.from(files).filter(isAudioFile)
+    if (list.length === 0) {
+      toast.error("No audio files found")
+      return
+    }
     const form = new FormData()
     list.forEach((f) => form.append("files", f))
     setBusy(true)
@@ -154,19 +166,39 @@ export function ImportPanel() {
           <p className="text-sm text-muted-foreground">
             Drag audio files here, or
           </p>
-          <Button
-            variant="secondary"
-            onClick={() => fileRef.current?.click()}
-            disabled={busy}
-          >
-            Choose files
-          </Button>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => fileRef.current?.click()}
+              disabled={busy}
+            >
+              Choose files
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => folderRef.current?.click()}
+              disabled={busy}
+            >
+              Choose folder
+            </Button>
+          </div>
           <input
             ref={fileRef}
             type="file"
             accept="audio/*,.flac,.m4a,.opus,.ogg"
             multiple
             hidden
+            onChange={(e) => e.target.files && uploadFiles(e.target.files)}
+          />
+          <input
+            ref={folderRef}
+            type="file"
+            multiple
+            hidden
+            // webkitdirectory selects a whole folder tree (non-standard attr).
+            {...({
+              webkitdirectory: "",
+            } as React.InputHTMLAttributes<HTMLInputElement>)}
             onChange={(e) => e.target.files && uploadFiles(e.target.files)}
           />
         </div>

@@ -18,6 +18,7 @@ import { FullPlayer } from "@/components/player/full-player"
 import { QueuePanel } from "@/components/player/queue-panel"
 import { Slider } from "@/components/ui/slider"
 import { formatTime } from "@/lib/format"
+import { useAlbumColor } from "@/lib/player/use-album-color"
 import { cn } from "@/lib/utils"
 import { current, usePlayer } from "@/store/player"
 
@@ -36,6 +37,7 @@ export function PlayerBar() {
   const seek = usePlayer((s) => s.seek)
   const setExpanded = usePlayer((s) => s.setExpanded)
   const [queueOpen, setQueueOpen] = useState(false)
+  const accent = useAlbumColor(track?.id, track?.hasCover ?? false)
 
   if (!track) return null
 
@@ -44,7 +46,15 @@ export function PlayerBar() {
       <FullPlayer />
       <QueuePanel open={queueOpen} onOpenChange={setQueueOpen} />
 
-      <footer className="border-t border-border bg-card/80 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/70">
+      <footer className="relative border-t border-border bg-card/80 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/70">
+        {/* Subtle accent pulled from the current album art. */}
+        {accent && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-70 transition-colors duration-700"
+            style={{ background: accent }}
+          />
+        )}
         <div className="mx-auto grid max-w-screen-2xl grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-3">
           {/* Now playing */}
           <button

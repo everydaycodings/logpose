@@ -1,6 +1,12 @@
 "use client"
 
-import { Heart, House, MagnifyingGlass, UploadSimple } from "@phosphor-icons/react"
+import {
+  Heart,
+  House,
+  MagnifyingGlass,
+  MusicNotes,
+  UploadSimple,
+} from "@phosphor-icons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -8,6 +14,7 @@ import { cn } from "@/lib/utils"
 const items = [
   { href: "/", label: "Home", icon: House },
   { href: "/search", label: "Search", icon: MagnifyingGlass },
+  { href: "/songs", label: "Songs", icon: MusicNotes },
   { href: "/liked", label: "Liked", icon: Heart },
   { href: "/import", label: "Add", icon: UploadSimple },
 ]
