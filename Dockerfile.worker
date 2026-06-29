@@ -1,0 +1,27 @@
+# --- Jolly import worker (yt-dlp + ffmpeg) ---
+FROM node:22-slim
+
+# System tools: ffmpeg for transcoding, yt-dlp (static binary) for downloads.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg ca-certificates curl python3 openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+       -o /usr/local/bin/yt-dlp \
+    && chmod a+rx /usr/local/bin/yt-dlp
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY prisma ./prisma
+COPY prisma.config.ts ./prisma.config.ts
+RUN npx prisma generate
+
+COPY tsconfig.json ./tsconfig.json
+COPY lib ./lib
+COPY worker ./worker
+
+# tsx runs the TypeScript worker directly.
+CMD ["npx", "tsx", "worker/index.ts"]

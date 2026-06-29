@@ -1,0 +1,135 @@
+// Jolly — personal music library schema
+// Run migrations with: npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TrackSource {
+  UPLOAD
+  YOUTUBE
+}
+
+enum ImportType {
+  UPLOAD
+  YOUTUBE
+}
+
+enum ImportStatus {
+  QUEUED
+  DOWNLOADING
+  TRANSCODING
+  FETCHING_META
+  DONE
+  FAILED
+}
+
+model Artist {
+  id        String   @id @default(cuid())
+  name      String
+  // Normalized (lowercased, trimmed) name for dedup/upsert.
+  slug      String   @unique
+  coverKey  String?
+  mbid      String?
+  createdAt DateTime @default(now())
+
+  albums Album[]
+  tracks Track[]
+}
+
+model Album {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique // normalized "artist::title"
+  year      Int?
+  coverKey  String?
+  mbid      String?
+  createdAt DateTime @default(now())
+
+  artistId String
+  artist   Artist  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tracks   Track[]
+
+  @@index([artistId])
+}
+
+model Track {
+  id          String      @id @default(cuid())
+  title       String
+  trackNumber Int?
+  durationMs  Int?
+  year        Int?
+  genre       String?
+  lyrics      String?     @db.Text
+  source      TrackSource
+  sourceUrl   String?
+  mbid        String?
+
+  // Object storage keys (MinIO / S3).
+  originalKey String? // original uploaded/downloaded file
+  mp3Key      String? // browser-friendly transcode used for playback
+  coverKey    String?
+
+  liked        Boolean   @default(false)
+  playCount    Int       @default(0)
+  lastPlayedAt DateTime?
+  createdAt    DateTime  @default(now())
+
+  artistId String?
+  artist   Artist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  albumId  String?
+  album    Album?  @relation(fields: [albumId], references: [id], onDelete: SetNull)
+
+  playlistEntries PlaylistTrack[]
+
+  @@index([artistId])
+  @@index([albumId])
+  @@index([liked])
+  @@index([createdAt])
+}
+
+model Playlist {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  coverKey    String?
+  createdAt   DateTime @default(now())
+
+  tracks PlaylistTrack[]
+}
+
+model PlaylistTrack {
+  id         String @id @default(cuid())
+  playlistId String
+  trackId    String
+  position   Int
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, trackId])
+  @@index([playlistId, position])
+}
+
+model ImportJob {
+  id        String       @id @default(cuid())
+  type      ImportType
+  status    ImportStatus @default(QUEUED)
+  progress  Int          @default(0)
+  // Source: YouTube URL or original upload filename.
+  sourceUrl String?
+  filename  String?
+  // Temp object key for an upload awaiting processing.
+  uploadKey String?
+  error     String?
+  trackId   String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}

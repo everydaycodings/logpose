@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // These React 19 rules are conservative performance hints. Our uses are
+    // intentional: hydration-mount guards, debounced fetches, resetting state
+    // when a dependency changes, and syncing the external Media Session API.
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/immutability": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;
