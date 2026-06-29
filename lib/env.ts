@@ -38,7 +38,7 @@ const schema = z.object({
   // MusicBrainz requires a descriptive User-Agent.
   MUSICBRAINZ_USER_AGENT: z
     .string()
-    .default("Jolly/0.1 (personal-music-app)"),
+    .default("LogPose/0.1 (personal-music-app)"),
 
   // Last.fm scrobbling (optional — dormant unless both are set).
   LASTFM_API_KEY: z.string().optional(),

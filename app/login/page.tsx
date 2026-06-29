@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import { LoginForm } from "@/components/auth/login-form"
-import { JollySeal } from "@/components/brand/jolly-seal"
+import { LogPoseSeal } from "@/components/brand/logpose-seal"
 
 export const metadata: Metadata = { title: "Come aboard" }
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Jolly"
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "LogPose"
 
 export default async function LoginPage({
   searchParams,
@@ -16,7 +16,7 @@ export default async function LoginPage({
   return (
     <main className="flex min-h-svh items-center justify-center bg-background p-6">
       <div className="flex w-full max-w-xs flex-col items-center gap-6">
-        <JollySeal className="size-20 opacity-90" />
+        <LogPoseSeal className="size-20 opacity-90" />
         <div className="text-center">
           <h1 className="font-heading text-5xl leading-none">{appName}</h1>
           <p className="mt-1 text-sm text-muted-foreground">

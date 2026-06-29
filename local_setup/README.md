@@ -1,6 +1,6 @@
 # Local development setup
 
-Spins up the backing services (Postgres, Redis, MinIO) so you can develop Jolly
+Spins up the backing services (Postgres, Redis, MinIO) so you can develop LogPose
 on your host with `npm run dev`. The full app + worker are **not** containerized
 here — that's what the root `docker-compose.yml` is for (production-style).
 
@@ -15,7 +15,7 @@ This starts:
 
 | Service  | URL / Port              | Notes                                  |
 | -------- | ----------------------- | -------------------------------------- |
-| Postgres | `localhost:5432`        | user/pass/db all `jolly`               |
+| Postgres | `localhost:5432`        | user/pass/db all `logpose`               |
 | Redis    | `localhost:6379`        | queue + rate limiting                  |
 | MinIO    | `localhost:9000`        | S3 API                                 |
 | MinIO UI | `localhost:9001`        | login `minioadmin` / `minioadmin`      |

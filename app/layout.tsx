@@ -26,7 +26,7 @@ const fontMono = JetBrains_Mono({
   variable: "--font-mono",
 })
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Jolly"
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "LogPose"
 
 export const metadata: Metadata = {
   title: { default: appName, template: `%s · ${appName}` },

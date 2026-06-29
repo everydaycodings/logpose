@@ -11,7 +11,7 @@ import {
   SkipForward,
 } from "@phosphor-icons/react"
 import { useEffect, useState } from "react"
-import { JollySeal } from "@/components/brand/jolly-seal"
+import { LogPoseSeal } from "@/components/brand/logpose-seal"
 import { Equalizer } from "@/components/player/equalizer"
 import { LyricsView } from "@/components/player/lyrics-view"
 import { SleepTimer } from "@/components/player/sleep-timer"
@@ -119,7 +119,7 @@ export function FullPlayer() {
               />
             ) : (
               <div className="flex size-full items-center justify-center">
-                <JollySeal className="size-1/2 opacity-25" />
+                <LogPoseSeal className="size-1/2 opacity-25" />
               </div>
             )}
           </div>

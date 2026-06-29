@@ -24,6 +24,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Run on everything except the login flow, Next internals, and public assets.
   matcher: [
-    "/((?!login|api/login|api/logout|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icons|jolly).*)",
+    "/((?!login|api/login|api/logout|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icons|logpose).*)",
   ],
 }

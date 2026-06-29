@@ -4,7 +4,7 @@ import { Plus } from "@phosphor-icons/react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
-import { JollySeal } from "@/components/brand/jolly-seal"
+import { LogPoseSeal } from "@/components/brand/logpose-seal"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -59,7 +59,7 @@ export function CreatePlaylistDialog() {
 
       <DialogContent className="sm:max-w-sm">
         <DialogHeader className="items-center text-center">
-          <JollySeal className="mb-1 size-12 opacity-90" />
+          <LogPoseSeal className="mb-1 size-12 opacity-90" />
           <DialogTitle className="font-heading text-3xl">New playlist</DialogTitle>
           <DialogDescription>Give your new collection a name.</DialogDescription>
         </DialogHeader>

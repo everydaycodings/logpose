@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next"
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Jolly"
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "LogPose"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

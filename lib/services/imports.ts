@@ -1,6 +1,6 @@
 import type { ImportStatus, Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
-import { enqueueImport } from "@/lib/queue"
+import { enqueueImport, importQueue } from "@/lib/queue"
 
 export async function createYoutubeImport(url: string) {
   const job = await db.importJob.create({
@@ -39,6 +39,20 @@ export function setJobStatus(
     status,
     ...(progress !== undefined ? { progress } : {}),
   })
+}
+
+/**
+ * Cancel/remove an import. Drops the still-queued Bull job so the worker never
+ * starts it, then deletes the row. If the job is already processing, the row
+ * deletion makes `processImport` no-op on its missing-record guard.
+ */
+export async function deleteJob(id: string) {
+  const job = await db.importJob.findUnique({ where: { id } })
+  if (!job) return false
+  const queued = await importQueue.getJob(id)
+  if (queued) await queued.remove().catch(() => {})
+  await db.importJob.delete({ where: { id } })
+  return true
 }
 
 /** Recent jobs for the import screen — active first, then recently finished. */

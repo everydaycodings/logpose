@@ -1,8 +1,8 @@
-# Jolly 🏴‍☠️
+# LogPose 🏴‍☠️
 
 A calm, personal music streaming app — a private Spotify-style player for a
 hand-curated collection. Add songs by uploading files or pasting a YouTube
-link; Jolly extracts the audio, cover art, and details for you. Subtly themed
+link; LogPose extracts the audio, cover art, and details for you. Subtly themed
 around the Straw Hat pirates, off-white and unhurried.
 
 ## Features

@@ -1,7 +1,7 @@
-// Jolly service worker — caches the app shell + static assets for a fast,
+// LogPose service worker — caches the app shell + static assets for a fast,
 // installable experience. Audio, covers, and all /api/ traffic are never
 // cached (they're large or dynamic).
-const CACHE = "jolly-v1"
+const CACHE = "logpose-v1"
 
 self.addEventListener("install", () => self.skipWaiting())
 

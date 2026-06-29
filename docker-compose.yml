@@ -1,4 +1,4 @@
-# Jolly — full self-hosted stack.
+# LogPose — full self-hosted stack.
 # Copy .env.example to .env and adjust before `docker compose up --build`.
 
 services:
@@ -6,16 +6,16 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: jolly
-      POSTGRES_PASSWORD: jolly
-      POSTGRES_DB: jolly
+      POSTGRES_USER: logpose
+      POSTGRES_PASSWORD: logpose
+      POSTGRES_DB: logpose
     ports:
       # Bound to localhost only — for local `npm run dev`, not exposed publicly.
       - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jolly"]
+      test: ["CMD-SHELL", "pg_isready -U logpose"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -77,7 +77,7 @@ services:
       minio:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://jolly:jolly@postgres:5432/jolly?schema=public
+      DATABASE_URL: postgresql://logpose:logpose@postgres:5432/logpose?schema=public
       REDIS_URL: redis://redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
@@ -87,8 +87,8 @@ services:
       S3_FORCE_PATH_STYLE: "true"
       APP_PASSWORD: ${APP_PASSWORD:-change-me}
       COOKIE_SECRET: ${COOKIE_SECRET:-change-this-to-a-long-random-secret}
-      MUSICBRAINZ_USER_AGENT: ${MUSICBRAINZ_USER_AGENT:-Jolly/0.1 (personal-music-app)}
-      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Jolly}
+      MUSICBRAINZ_USER_AGENT: ${MUSICBRAINZ_USER_AGENT:-LogPose/0.1 (personal-music-app)}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-LogPose}
     ports:
       - "3000:3000"
 
@@ -105,7 +105,7 @@ services:
       minio:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://jolly:jolly@postgres:5432/jolly?schema=public
+      DATABASE_URL: postgresql://logpose:logpose@postgres:5432/logpose?schema=public
       REDIS_URL: redis://redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
@@ -116,7 +116,7 @@ services:
       # Worker doesn't serve requests but env validation needs these present.
       APP_PASSWORD: ${APP_PASSWORD:-change-me}
       COOKIE_SECRET: ${COOKIE_SECRET:-change-this-to-a-long-random-secret}
-      MUSICBRAINZ_USER_AGENT: ${MUSICBRAINZ_USER_AGENT:-Jolly/0.1 (personal-music-app)}
+      MUSICBRAINZ_USER_AGENT: ${MUSICBRAINZ_USER_AGENT:-LogPose/0.1 (personal-music-app)}
 
 volumes:
   pgdata:

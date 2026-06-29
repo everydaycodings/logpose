@@ -5,7 +5,7 @@ import { env } from "./env"
  * signed with COOKIE_SECRET (HMAC-SHA256 via Web Crypto, so it works in both
  * the Node and Edge runtimes used by `proxy.ts`).
  */
-export const SESSION_COOKIE = "jolly_session"
+export const SESSION_COOKIE = "logpose_session"
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 function toBase64Url(bytes: ArrayBuffer | Uint8Array): string {

@@ -3,6 +3,7 @@
 import {
   CheckCircle,
   Spinner,
+  Trash,
   UploadSimple,
   WarningCircle,
   YoutubeLogo,
@@ -76,6 +77,16 @@ export function ImportPanel() {
     } else {
       const d = await res.json().catch(() => ({}))
       toast.error(d.error ?? "Could not add that link")
+    }
+  }
+
+  async function deleteJob(id: string) {
+    setJobs((prev) => prev.filter((j) => j.id !== id)) // optimistic
+    try {
+      const res = await fetch(`/api/import/jobs/${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error()
+    } catch {
+      toast.error("Could not delete that import") // next poll restores the row
     }
   }
 
@@ -167,7 +178,7 @@ export function ImportPanel() {
           <h2 className="mb-3 font-heading text-2xl">Recent imports</h2>
           <ul className="flex flex-col gap-2">
             {jobs.map((job) => (
-              <JobRow key={job.id} job={job} />
+              <JobRow key={job.id} job={job} onDelete={deleteJob} />
             ))}
           </ul>
         </div>
@@ -176,7 +187,13 @@ export function ImportPanel() {
   )
 }
 
-function JobRow({ job }: { job: Job }) {
+function JobRow({
+  job,
+  onDelete,
+}: {
+  job: Job
+  onDelete: (id: string) => void
+}) {
   const label = job.filename ?? job.sourceUrl ?? "Import"
   const active = !["DONE", "FAILED"].includes(job.status)
   return (
@@ -199,6 +216,16 @@ function JobRow({ job }: { job: Job }) {
         </div>
         {active && <Progress value={job.progress} className="mt-1.5 h-1" />}
       </div>
+      {job.status !== "DONE" && (
+        <button
+          type="button"
+          onClick={() => onDelete(job.id)}
+          aria-label="Delete import"
+          className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
+        >
+          <Trash className="size-4" />
+        </button>
+      )}
     </li>
   )
 }

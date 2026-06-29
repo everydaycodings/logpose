@@ -42,7 +42,7 @@ export function RestorePanel() {
       <div>
         <div className="font-medium">Restore from backup</div>
         <div className="text-sm text-muted-foreground">
-          Upload a <code>jolly-backup-*.zip</code> exported above.
+          Upload a <code>logpose-backup-*.zip</code> exported above.
         </div>
       </div>
       <Button

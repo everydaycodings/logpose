@@ -60,7 +60,7 @@ export default async function SettingsPage() {
               <div className="text-sm text-muted-foreground">
                 Everything: the database plus every audio file and cover image,
                 in one .zip ({formatBytes(stats.totalBytes)}). Use this to move
-                Jolly to another server or as a complete safety copy.
+                LogPose to another server or as a complete safety copy.
               </div>
             </div>
             <Button asChild className="gap-2">

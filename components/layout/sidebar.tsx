@@ -11,13 +11,13 @@ import {
 } from "@phosphor-icons/react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { JollySeal } from "@/components/brand/jolly-seal"
+import { LogPoseSeal } from "@/components/brand/logpose-seal"
 import { ThemeSwitcher } from "@/components/theme/theme-switcher"
 import { CreatePlaylistDialog } from "@/components/playlists/create-playlist-dialog"
 import { SMART_MIXES, SMART_KEYS } from "@/lib/smart"
 import { cn } from "@/lib/utils"
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Jolly"
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "LogPose"
 
 type PlaylistLink = { id: string; name: string }
 
@@ -25,7 +25,7 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
   return (
     <nav className="flex h-full w-60 shrink-0 flex-col gap-4 border-r border-border bg-sidebar p-3">
       <Link href="/" className="flex items-center gap-2 px-2 pt-1">
-        <JollySeal className="size-8" />
+        <LogPoseSeal className="size-8" />
         <span className="font-heading text-3xl leading-none">{appName}</span>
       </Link>
 

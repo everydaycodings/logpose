@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { JollySeal } from "@/components/brand/jolly-seal"
+import { LogPoseSeal } from "@/components/brand/logpose-seal"
 import { cn } from "@/lib/utils"
 
 /**
- * Album/track artwork with a graceful Jolly-seal fallback when there's no
+ * Album/track artwork with a graceful LogPose-seal fallback when there's no
  * cover (or it fails to load). `coverTrackId` is the track whose cover we pull.
  */
 export function Cover({
@@ -41,7 +41,7 @@ export function Cover({
         />
       ) : (
         <div className="flex size-full items-center justify-center">
-          <JollySeal className="size-1/2 opacity-25" />
+          <LogPoseSeal className="size-1/2 opacity-25" />
         </div>
       )}
     </div>

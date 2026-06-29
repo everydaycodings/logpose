@@ -55,7 +55,7 @@ export async function dumpDatabase() {
     ])
   return {
     exportedAt: new Date().toISOString(),
-    app: "jolly",
+    app: "logpose",
     version: 1,
     counts: {
       artists: artists.length,

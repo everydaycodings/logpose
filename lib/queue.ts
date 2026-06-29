@@ -29,6 +29,7 @@ export function enqueueImport(importId: string) {
     "import",
     { importId },
     {
+      jobId: importId,
       attempts: 2,
       backoff: { type: "exponential", delay: 5000 },
       removeOnComplete: 50,

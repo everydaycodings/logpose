@@ -1,4 +1,4 @@
-// Jolly — personal music library schema
+// LogPose — personal music library schema
 // Run migrations with: npx prisma migrate dev
 
 generator client {

@@ -64,7 +64,7 @@ export async function processImport(importId: string) {
     return
   }
 
-  const dir = await mkdtemp(path.join(tmpdir(), "jolly-"))
+  const dir = await mkdtemp(path.join(tmpdir(), "logpose-"))
   try {
     let originalPath: string
     let originalKey: string

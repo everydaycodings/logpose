@@ -9,7 +9,7 @@ import { dumpDatabase, listAllObjects } from "@/lib/services/export"
 
 export const dynamic = "force-dynamic"
 
-const README = `Jolly backup
+const README = `LogPose backup
 ============
 
 library.json   Full database export (tracks, artists, albums, playlists).
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     return new Response(JSON.stringify(dump, null, 2), {
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="jolly-metadata-${stamp}.json"`,
+        "Content-Disposition": `attachment; filename="logpose-metadata-${stamp}.json"`,
       },
     })
   }
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
   return new Response(webStream, {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="jolly-backup-${stamp}.zip"`,
+      "Content-Disposition": `attachment; filename="logpose-backup-${stamp}.zip"`,
     },
   })
 }

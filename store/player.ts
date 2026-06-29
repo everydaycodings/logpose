@@ -15,7 +15,7 @@ export const EQ_PRESETS: Record<string, number[]> = {
   "Lo-fi": [4, 2, 0, -2, -5, -8],
 }
 
-const PREFS_KEY = "jolly-prefs"
+const PREFS_KEY = "logpose-prefs"
 
 type Prefs = {
   volume: number

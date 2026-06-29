@@ -27,7 +27,7 @@ type Dump = {
 }
 
 /**
- * Restore a Jolly backup .zip: re-upload assets and upsert all rows.
+ * Restore a LogPose backup .zip: re-upload assets and upsert all rows.
  * Idempotent — existing rows (matched by id) are updated, missing ones created.
  */
 export async function restoreBackup(zipBuffer: Buffer) {
