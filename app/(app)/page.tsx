@@ -26,9 +26,9 @@ function greeting() {
 export default async function HomePage() {
   const [recent, recentlyPlayed, songs, albums, artists, playlists] =
     await Promise.all([
-      getRecentTracks(8),
-      getRecentlyPlayed(8),
-      getSongsPreview(7),
+      getRecentTracks(5),
+      getRecentlyPlayed(5),
+      getSongsPreview(5),
       getAlbums(),
       getArtists(),
       getPlaylists(),
@@ -72,7 +72,7 @@ export default async function HomePage() {
       {albums.length > 0 && (
         <Section title="Albums" href="/albums">
           <CardGrid>
-            {albums.slice(0, 12).map((a) => (
+            {albums.slice(0, 5).map((a) => (
               <AlbumCard key={a.id} album={a} />
             ))}
           </CardGrid>
@@ -82,7 +82,7 @@ export default async function HomePage() {
       {artists.length > 0 && (
         <Section title="Artists" href="/artists">
           <CardGrid>
-            {artists.slice(0, 12).map((a) => (
+            {artists.slice(0, 5).map((a) => (
               <ArtistCard key={a.id} artist={a} />
             ))}
           </CardGrid>
@@ -92,7 +92,7 @@ export default async function HomePage() {
       {playlists.length > 0 && (
         <Section title="Playlists">
           <CardGrid>
-            {playlists.map((p) => (
+            {playlists.slice(0, 5).map((p) => (
               <PlaylistCard key={p.id} playlist={p} />
             ))}
           </CardGrid>
