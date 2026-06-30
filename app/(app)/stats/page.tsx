@@ -93,14 +93,14 @@ export default async function StatsPage() {
           {mostPlayed.length > 0 && (
             <Section title="On repeat">
               <div className="rounded-2xl bg-card/50 p-2">
-                <TrackList tracks={mostPlayed} showPlayCount showCover={false} />
+                <TrackList tracks={mostPlayed} showPlayCount />
               </div>
             </Section>
           )}
           {leastPlayed.length > 0 && (
             <Section title="Hidden gems">
               <div className="rounded-2xl bg-card/50 p-2">
-                <TrackList tracks={leastPlayed} showPlayCount showCover={false} />
+                <TrackList tracks={leastPlayed} showPlayCount />
               </div>
             </Section>
           )}
