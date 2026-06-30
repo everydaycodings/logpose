@@ -41,10 +41,13 @@ const isAudioFile = (f: File) =>
   f.type.startsWith("audio/") ||
   AUDIO_EXT.some((ext) => f.name.toLowerCase().endsWith(ext))
 
+const JOBS_PER_PAGE = 10
+
 export function ImportPanel() {
   const [url, setUrl] = useState("")
   const [busy, setBusy] = useState(false)
   const [jobs, setJobs] = useState<Job[]>([])
+  const [page, setPage] = useState(0)
   const fileRef = useRef<HTMLInputElement>(null)
   const folderRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -206,13 +209,55 @@ export function ImportPanel() {
 
       {/* Job list */}
       {jobs.length > 0 && (
-        <div>
-          <h2 className="mb-3 font-heading text-2xl">Recent imports</h2>
-          <ul className="flex flex-col gap-2">
-            {jobs.map((job) => (
-              <JobRow key={job.id} job={job} onDelete={deleteJob} />
-            ))}
-          </ul>
+        <Jobs jobs={jobs} page={page} setPage={setPage} onDelete={deleteJob} />
+      )}
+    </div>
+  )
+}
+
+function Jobs({
+  jobs,
+  page,
+  setPage,
+  onDelete,
+}: {
+  jobs: Job[]
+  page: number
+  setPage: (n: number) => void
+  onDelete: (id: string) => void
+}) {
+  const pageCount = Math.ceil(jobs.length / JOBS_PER_PAGE)
+  // New jobs from polling can shrink the page count past the current page.
+  const current = Math.min(page, pageCount - 1)
+  const visible = jobs.slice(current * JOBS_PER_PAGE, (current + 1) * JOBS_PER_PAGE)
+
+  return (
+    <div>
+      <h2 className="mb-3 font-heading text-2xl">Recent imports</h2>
+      <ul className="flex flex-col gap-2">
+        {visible.map((job) => (
+          <JobRow key={job.id} job={job} onDelete={onDelete} />
+        ))}
+      </ul>
+      {pageCount > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => setPage(current - 1)}
+            disabled={current === 0}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {current + 1} of {pageCount}
+          </span>
+          <Button
+            variant="secondary"
+            onClick={() => setPage(current + 1)}
+            disabled={current >= pageCount - 1}
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>
