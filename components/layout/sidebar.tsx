@@ -32,6 +32,7 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
         <span className="font-heading text-3xl leading-none">{appName}</span>
       </Link>
 
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
       <div className="flex flex-col gap-1">
         <NavLink href="/" icon={<House className="size-5" />}>
           Home
@@ -62,7 +63,7 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
         </NavLink>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-col">
         <div className="px-2 py-1">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Mixes
@@ -82,7 +83,7 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
           </span>
           <CreatePlaylistDialog />
         </div>
-        <ul className="flex-1 overflow-y-auto">
+        <ul>
           {playlists.map((p) => (
             <li key={p.id}>
               <NavLink href={`/playlist/${p.id}`} subtle>
@@ -96,6 +97,7 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
             </li>
           )}
         </ul>
+      </div>
       </div>
 
       <div className="flex items-center justify-between border-t border-border pt-2">
