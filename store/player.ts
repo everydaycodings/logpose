@@ -97,6 +97,9 @@ type PlayerState = {
   expanded: boolean
   // Transient seek target the player provider consumes and clears.
   seekTarget: number | null
+  // Bumped each time the current track restarts in place (a loop), so the
+  // engine records another play even though the track id didn't change.
+  playToken: number
 
   // --- actions ---
   playQueue: (tracks: PlayableTrack[], startIndex?: number) => void
@@ -178,6 +181,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   sleepEndOfTrack: false,
   expanded: false,
   seekTarget: null,
+  playToken: 0,
 
   playQueue: (tracks, startIndex = 0) => {
     if (tracks.length === 0) return
@@ -219,7 +223,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       // Wrapping to a different track changes the loaded id (engine reloads);
       // a single-track queue stays on the same id, so restart it in place.
       if (s.index === 0) {
-        set({ seekTarget: 0, positionMs: 0, isPlaying: true })
+        set({ seekTarget: 0, positionMs: 0, isPlaying: true, playToken: s.playToken + 1 })
       } else {
         set({ index: 0, positionMs: 0, isPlaying: true })
       }
@@ -251,7 +255,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       return
     }
     if (s.repeat === "one") {
-      set({ seekTarget: 0, positionMs: 0, isPlaying: true })
+      set({ seekTarget: 0, positionMs: 0, isPlaying: true, playToken: s.playToken + 1 })
       return
     }
     get().next()

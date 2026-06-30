@@ -22,6 +22,9 @@ export function PlayerEngine() {
   const loadedIdRef = useRef<string | null>(null)
   const crossfadingRef = useRef(false)
   const adoptRef = useRef(false)
+  // Whether the current listen has crossed the play-count threshold yet.
+  // Reset to false whenever a fresh listen begins (new track, loop, crossfade).
+  const countedRef = useRef(false)
 
   // Build the Web Audio graph lazily (must follow a user gesture).
   function ensureGraph() {
@@ -89,6 +92,7 @@ export function PlayerEngine() {
       // Audio for this track is already playing (we crossfaded into it).
       adoptRef.current = false
       loadedIdRef.current = cur.id
+      countedRef.current = false
       updateMediaSession(cur)
       return
     }
@@ -103,16 +107,24 @@ export function PlayerEngine() {
     el.currentTime = 0
     loadedIdRef.current = cur.id
     crossfadingRef.current = false
+    countedRef.current = false
     if (usePlayer.getState().isPlaying) {
       void ctxRef.current?.resume()
       void el.play().catch(() => {})
-      void fetch(`/api/tracks/${cur.id}/play`, { method: "POST" }).catch(
-        () => {},
-      )
     }
     updateMediaSession(cur)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cur?.id])
+
+  // --- Loop replays ---
+  // A track looping in place (repeat-one, or repeat-all on a single track)
+  // keeps the same id, so the load effect doesn't re-arm counting. The store
+  // bumps playToken on each loop; treat it as a fresh listen to be counted.
+  const playToken = usePlayer((s) => s.playToken)
+  useEffect(() => {
+    if (playToken === 0) return
+    countedRef.current = false
+  }, [playToken])
 
   // --- Play / pause ---
   const isPlaying = usePlayer((s) => s.isPlaying)
@@ -207,11 +219,28 @@ export function PlayerEngine() {
     usePlayer.getState().setProgress(posMs, durMs)
 
     const s = usePlayer.getState()
+
+    // Record a play once the listen crosses the threshold — half the track or
+    // 4 minutes, whichever comes first (Last.fm's scrobble rule). This avoids
+    // counting skips.
+    if (!countedRef.current && durMs > 0 && posMs >= Math.min(durMs / 2, 240_000)) {
+      countedRef.current = true
+      const id = current(s)?.id
+      if (id) {
+        void fetch(`/api/tracks/${id}/play`, { method: "POST" }).catch(() => {})
+      }
+    }
+
     const cf = s.crossfadeSec
     if (cf > 0 && durMs > 0 && !crossfadingRef.current) {
       const remaining = (el.duration - el.currentTime) * 1000
       const upcoming = nextTrack(s)
-      if (upcoming && remaining <= cf * 1000) startCrossfade(upcoming.id)
+      // Don't crossfade a track into itself (repeat-one, or repeat-all on a
+      // single-track queue) — let it loop via the end-of-track path so it
+      // restarts cleanly and the replay is counted exactly once.
+      if (upcoming && upcoming.id !== current(s)?.id && remaining <= cf * 1000) {
+        startCrossfade(upcoming.id)
+      }
     }
   }
 
@@ -225,7 +254,8 @@ export function PlayerEngine() {
     other.src = streamUrl(nextId)
     other.currentTime = 0
     void other.play().catch(() => {})
-    void fetch(`/api/tracks/${nextId}/play`, { method: "POST" }).catch(() => {})
+    // The play is counted once it crosses the listen threshold (see
+    // onTimeUpdate), after this track becomes the active element.
 
     const now = ctx.currentTime
     const cf = usePlayer.getState().crossfadeSec
