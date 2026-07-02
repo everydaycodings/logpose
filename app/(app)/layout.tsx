@@ -34,7 +34,7 @@ export default async function AppLayout({
         </main>
       </div>
       <PlayerBar />
-      <MobileNav />
+      <MobileNav playlists={playlists.map((p) => ({ id: p.id, name: p.name }))} />
       <PlayerEngine />
       <KeyboardShortcuts />
       <CommandPalette />
