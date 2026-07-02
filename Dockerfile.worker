@@ -1,13 +1,19 @@
 # --- LogPose import worker (yt-dlp + ffmpeg) ---
 FROM node:22-slim
 
-# System tools: ffmpeg for transcoding, yt-dlp (static binary) for downloads.
+# System tools: ffmpeg for transcoding, yt-dlp (static binary) for downloads,
+# deno as the JS runtime yt-dlp now requires for YouTube extraction.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg ca-certificates curl python3 openssl \
+    ffmpeg ca-certificates curl python3 openssl unzip \
     && rm -rf /var/lib/apt/lists/* \
     && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
        -o /usr/local/bin/yt-dlp \
-    && chmod a+rx /usr/local/bin/yt-dlp
+    && chmod a+rx /usr/local/bin/yt-dlp \
+    && curl -fsSL https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip \
+       -o /tmp/deno.zip \
+    && unzip -d /usr/local/bin /tmp/deno.zip \
+    && rm /tmp/deno.zip \
+    && chmod a+rx /usr/local/bin/deno
 
 WORKDIR /app
 ENV NODE_ENV=production
