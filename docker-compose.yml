@@ -61,12 +61,29 @@ services:
       exit 0;
       "
 
+  # One-shot: apply DB migrations before app/worker start. Uses the worker
+  # image because it carries the full dependency tree the Prisma CLI needs
+  # (the slim standalone app image doesn't).
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://logpose:logpose@postgres:5432/logpose?schema=public
+    command: ["npx", "prisma", "migrate", "deploy"]
+    restart: "no"
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -96,6 +113,8 @@ services:
       dockerfile: Dockerfile.worker
     restart: unless-stopped
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
