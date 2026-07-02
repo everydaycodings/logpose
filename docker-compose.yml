@@ -134,6 +134,11 @@ services:
       APP_PASSWORD: ${APP_PASSWORD:-change-me}
       COOKIE_SECRET: ${COOKIE_SECRET:-change-this-to-a-long-random-secret}
       MUSICBRAINZ_USER_AGENT: ${MUSICBRAINZ_USER_AGENT:-LogPose/0.1 (personal-music-app)}
+      # Set on the host to a cookies.txt path to enable YouTube auth; the file
+      # is mounted read-only below. Leave YTDLP_COOKIES_FILE unset to disable.
+      YTDLP_COOKIES: ${YTDLP_COOKIES_FILE:+/cookies.txt}
+    volumes:
+      - ${YTDLP_COOKIES_FILE:-/dev/null}:/cookies.txt:ro
 
 volumes:
   pgdata:

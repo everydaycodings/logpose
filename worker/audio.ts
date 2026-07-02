@@ -5,6 +5,12 @@ import { promisify } from "node:util"
 
 const exec = promisify(execFile)
 
+// Optional cookies.txt for YouTube's anti-bot check (needed from datacenter/VPS
+// IPs). Set YTDLP_COOKIES to a file path to enable; dormant otherwise.
+const cookieArgs = process.env.YTDLP_COOKIES
+  ? ["--cookies", process.env.YTDLP_COOKIES]
+  : []
+
 export type YtInfo = {
   title?: string
   track?: string
@@ -40,6 +46,7 @@ export async function ytDownload(
       "--convert-thumbnails",
       "jpg",
       "--no-playlist",
+      ...cookieArgs,
       "-o",
       path.join(dir, "audio.%(ext)s"),
       url,
@@ -73,7 +80,7 @@ export async function ytDownload(
 export async function ytPlaylistEntries(url: string): Promise<string[]> {
   const { stdout } = await exec(
     "yt-dlp",
-    ["--flat-playlist", "--print", "%(id)s", url],
+    ["--flat-playlist", ...cookieArgs, "--print", "%(id)s", url],
     { maxBuffer: 1024 * 1024 * 16 },
   )
   return stdout
