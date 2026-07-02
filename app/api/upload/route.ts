@@ -25,7 +25,10 @@ export async function POST(request: Request) {
   )
   if (!limit.ok) return tooManyRequests(limit.retryAfter)
 
-  const form = await request.formData().catch(() => null)
+  const form = await request.formData().catch((err) => {
+    console.error("upload: failed to parse form data", err)
+    return null
+  })
   if (!form) return Response.json({ error: "Invalid form data." }, { status: 400 })
 
   const files = form.getAll("files").filter((f): f is File => f instanceof File)
@@ -33,19 +36,15 @@ export async function POST(request: Request) {
     return Response.json({ error: "No files provided." }, { status: 400 })
   }
 
+  // A single problem file must never block the batch: skip what we can't take
+  // (too large / not audio) and import the rest. Metadata gaps are fine — the
+  // worker leaves missing tags blank for the user to fill in later.
   const created: string[] = []
+  const skipped: string[] = []
   for (const file of files) {
-    if (file.size > MAX_BYTES) {
-      return Response.json(
-        { error: `${file.name} is larger than 100 MB.` },
-        { status: 413 },
-      )
-    }
-    if (!isAudio(file)) {
-      return Response.json(
-        { error: `${file.name} is not an audio file.` },
-        { status: 415 },
-      )
+    if (file.size > MAX_BYTES || !isAudio(file)) {
+      skipped.push(file.name)
+      continue
     }
     const type = file.type || "audio/mpeg"
 
@@ -56,5 +55,12 @@ export async function POST(request: Request) {
     created.push(job.id)
   }
 
-  return Response.json({ ids: created }, { status: 202 })
+  if (created.length === 0) {
+    return Response.json(
+      { error: "None of the files could be uploaded.", skipped },
+      { status: 415 },
+    )
+  }
+
+  return Response.json({ ids: created, skipped }, { status: 202 })
 }

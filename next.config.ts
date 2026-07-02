@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   experimental: {
     // Audio uploads can be large.
     serverActions: { bodySizeLimit: "100mb" },
+    // proxy.ts buffers each request body (default 10MB), which truncated large
+    // uploads and made request.formData() fail. Match the 100MB upload cap.
+    proxyClientMaxBodySize: "100mb",
   },
 }
 
