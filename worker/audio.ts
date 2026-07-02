@@ -11,6 +11,12 @@ const cookieArgs = process.env.YTDLP_COOKIES
   ? ["--cookies", process.env.YTDLP_COOKIES]
   : []
 
+// Optional yt-dlp --extractor-args, e.g. "youtube:player_client=tv,web_safari"
+// to dodge 403s on the media CDN (PO-token requirement) from server IPs.
+const extractorArgs = process.env.YTDLP_EXTRACTOR_ARGS
+  ? ["--extractor-args", process.env.YTDLP_EXTRACTOR_ARGS]
+  : []
+
 export type YtInfo = {
   title?: string
   track?: string
@@ -47,6 +53,7 @@ export async function ytDownload(
       "jpg",
       "--no-playlist",
       ...cookieArgs,
+      ...extractorArgs,
       "-o",
       path.join(dir, "audio.%(ext)s"),
       url,
@@ -80,7 +87,7 @@ export async function ytDownload(
 export async function ytPlaylistEntries(url: string): Promise<string[]> {
   const { stdout } = await exec(
     "yt-dlp",
-    ["--flat-playlist", ...cookieArgs, "--print", "%(id)s", url],
+    ["--flat-playlist", ...cookieArgs, ...extractorArgs, "--print", "%(id)s", url],
     { maxBuffer: 1024 * 1024 * 16 },
   )
   return stdout

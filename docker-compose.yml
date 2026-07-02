@@ -137,6 +137,8 @@ services:
       # Set on the host to a cookies.txt path to enable YouTube auth; the file
       # is mounted read-only below. Leave YTDLP_COOKIES_FILE unset to disable.
       YTDLP_COOKIES: ${YTDLP_COOKIES_FILE:+/cookies.txt}
+      # Optional yt-dlp --extractor-args to work around CDN 403s from server IPs.
+      YTDLP_EXTRACTOR_ARGS: ${YTDLP_EXTRACTOR_ARGS:-}
     volumes:
       - ${YTDLP_COOKIES_FILE:-/dev/null}:/cookies.txt:ro
 
