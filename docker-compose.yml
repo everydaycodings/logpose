@@ -21,8 +21,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:6379:6379"
+    # No published port: app/worker reach Redis over the internal network.
     volumes:
       - redisdata:/data
     healthcheck:
@@ -39,8 +38,8 @@ services:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
     ports:
-      - "9000:9000" # S3 API (browser fetches presigned URLs here)
-      - "9001:9001" # web console
+      - "9000:9000" # S3 API (browser fetches presigned URLs here, via nginx)
+      - "127.0.0.1:9010:9001" # web console — localhost-only, remapped off 9001
     volumes:
       - miniodata:/data
     healthcheck:
@@ -88,7 +87,8 @@ services:
       MUSICBRAINZ_USER_AGENT: ${MUSICBRAINZ_USER_AGENT:-LogPose/0.1 (personal-music-app)}
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-LogPose}
     ports:
-      - "3000:3000"
+      # Localhost-only: nginx on the host proxies HTTPS traffic to this port.
+      - "127.0.0.1:3010:3000"
 
   worker:
     build:
