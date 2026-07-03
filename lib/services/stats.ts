@@ -19,6 +19,7 @@ export async function getListeningStats() {
       include: {
         artist: { select: { id: true, name: true } },
         album: { select: { id: true, title: true, coverKey: true } },
+        featuredArtists: { select: { name: true } },
       },
       orderBy: { playCount: "desc" },
       take: 8,
@@ -102,6 +103,7 @@ export async function getOnThisDay(): Promise<PlayableTrack[]> {
     include: {
       artist: { select: { id: true, name: true } },
       album: { select: { id: true, title: true, coverKey: true } },
+      featuredArtists: { select: { name: true } },
     },
   })
   return tracks.map(toPlayable)

@@ -1,3 +1,13 @@
+/** Render a track's artists as "Primary feat. Guest, Guest". */
+export function formatArtists(t: {
+  artist: string | null
+  featured?: string[]
+}): string {
+  const primary = t.artist ?? "Unknown artist"
+  if (!t.featured?.length) return primary
+  return `${primary} feat. ${t.featured.join(", ")}`
+}
+
 /** Format a byte count as a human-readable size. */
 export function formatBytes(bytes: number): string {
   if (bytes <= 0) return "0 B"

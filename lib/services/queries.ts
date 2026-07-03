@@ -5,6 +5,7 @@ import type { PlayableTrack } from "@/lib/types"
 const trackInclude = {
   artist: { select: { id: true, name: true } },
   album: { select: { id: true, title: true, coverKey: true } },
+  featuredArtists: { select: { name: true } },
 } satisfies Prisma.TrackInclude
 
 type TrackWithRels = Prisma.TrackGetPayload<{ include: typeof trackInclude }>
@@ -15,6 +16,7 @@ export function toPlayable(t: TrackWithRels): PlayableTrack {
     title: t.title,
     artist: t.artist?.name ?? null,
     artistId: t.artistId,
+    featured: t.featuredArtists.map((a) => a.name),
     album: t.album?.title ?? null,
     albumId: t.albumId,
     durationMs: t.durationMs,
@@ -223,6 +225,7 @@ export async function getTrackEditData(id: string) {
     include: {
       artist: { select: { name: true } },
       album: { select: { title: true } },
+      featuredArtists: { select: { name: true }, orderBy: { name: "asc" } },
     },
   })
   if (!t) return null
@@ -230,6 +233,7 @@ export async function getTrackEditData(id: string) {
     id: t.id,
     title: t.title,
     artist: t.artist?.name ?? "",
+    featured: t.featuredArtists.map((a) => a.name).join(", "),
     album: t.album?.title ?? "",
     year: t.year ?? undefined,
     genre: t.genre ?? "",

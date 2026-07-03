@@ -4,6 +4,8 @@ export type PlayableTrack = {
   title: string
   artist: string | null
   artistId: string | null
+  /** Additional/guest artists beyond the primary `artist`. */
+  featured: string[]
   album: string | null
   albumId: string | null
   durationMs: number | null

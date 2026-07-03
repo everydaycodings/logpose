@@ -17,7 +17,7 @@ import { LyricsView } from "@/components/player/lyrics-view"
 import { SleepTimer } from "@/components/player/sleep-timer"
 import { Visualizer } from "@/components/player/visualizer"
 import { Slider } from "@/components/ui/slider"
-import { formatTime } from "@/lib/format"
+import { formatArtists, formatTime } from "@/lib/format"
 import { useAlbumColor } from "@/lib/player/use-album-color"
 import { cn } from "@/lib/utils"
 import { current, usePlayer } from "@/store/player"
@@ -128,7 +128,7 @@ export function FullPlayer() {
         <div className="w-full text-center">
           <h2 className="truncate font-heading text-4xl">{track.title}</h2>
           <p className="truncate text-muted-foreground">
-            {track.artist ?? "Unknown artist"}
+            {formatArtists(track)}
             {track.album ? ` · ${track.album}` : ""}
           </p>
         </div>

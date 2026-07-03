@@ -7,6 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { formatArtists } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { usePlayer } from "@/store/player"
 
@@ -62,7 +63,7 @@ export function QueuePanel({
                     {t.title}
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
-                    {t.artist ?? "Unknown artist"}
+                    {formatArtists(t)}
                   </div>
                 </div>
               </button>

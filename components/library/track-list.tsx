@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { deleteTrack } from "@/lib/actions"
 import { confirm } from "@/lib/dialog"
-import { formatTime } from "@/lib/format"
+import { formatArtists, formatTime } from "@/lib/format"
 import type { PlayableTrack } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { current, usePlayer } from "@/store/player"
@@ -146,7 +146,7 @@ function TrackRow({
           {track.title}
         </div>
         <div className="truncate text-xs text-muted-foreground">
-          {track.artist ?? "Unknown artist"}
+          {formatArtists(track)}
           {track.album ? ` · ${track.album}` : ""}
         </div>
       </button>

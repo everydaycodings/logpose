@@ -42,6 +42,8 @@ model Artist {
 
   albums Album[]
   tracks Track[]
+  // Tracks where this artist is a featured/guest artist (not the primary).
+  featuredOn Track[] @relation("TrackFeaturedArtists")
 }
 
 model Album {
@@ -92,6 +94,8 @@ model Track {
   artist   Artist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
   albumId  String?
   album    Album?  @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  // Additional/guest artists beyond the primary `artist` above.
+  featuredArtists Artist[] @relation("TrackFeaturedArtists")
 
   playlistEntries PlaylistTrack[]
   playEvents      PlayEvent[]

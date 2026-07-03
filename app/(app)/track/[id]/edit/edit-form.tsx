@@ -1,5 +1,6 @@
 "use client"
 
+import { X } from "@phosphor-icons/react"
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
@@ -14,6 +15,7 @@ type Data = {
   id: string
   title: string
   artist: string
+  featured: string
   album: string
   year?: number
   genre: string
@@ -34,6 +36,14 @@ export function EditForm({
 }) {
   const router = useRouter()
   const [form, setForm] = useState(data)
+  const [featured, setFeatured] = useState<string[]>(() =>
+    data.featured
+      ? data.featured
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
+  )
   const [saving, setSaving] = useState(false)
   const [coverBust, setCoverBust] = useState(0)
   const [refetching, setRefetching] = useState(false)
@@ -49,6 +59,7 @@ export function EditForm({
     const res = await updateTrack(data.id, {
       title: form.title,
       artist: form.artist || undefined,
+      featured,
       album: form.album || undefined,
       year: form.year,
       genre: form.genre || undefined,
@@ -126,6 +137,14 @@ export function EditForm({
                 <option key={n} value={n} />
               ))}
             </datalist>
+          </Field>
+          <Field label="Featured artists">
+            <TagInput
+              value={featured}
+              onChange={setFeatured}
+              suggestionsId="artist-names"
+              placeholder="Add a guest, press Enter"
+            />
           </Field>
           <Field label="Album">
             <Input
@@ -230,6 +249,70 @@ function Field({
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
       {children}
+    </div>
+  )
+}
+
+/** Chips/tags input: type a name, Enter (or comma) commits it as a removable pill. */
+function TagInput({
+  value,
+  onChange,
+  suggestionsId,
+  placeholder,
+}: {
+  value: string[]
+  onChange: (next: string[]) => void
+  suggestionsId?: string
+  placeholder?: string
+}) {
+  const [draft, setDraft] = useState("")
+
+  function add(raw: string) {
+    const name = raw.trim()
+    setDraft("")
+    if (!name) return
+    if (value.some((v) => v.toLowerCase() === name.toLowerCase())) return
+    onChange([...value, name])
+  }
+
+  return (
+    <div className="flex min-h-8 flex-wrap items-center gap-1 rounded-none border border-input bg-transparent px-1.5 py-1 focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/50 dark:bg-input/30">
+      {value.map((name) => (
+        <span
+          key={name}
+          className="inline-flex items-center gap-1 rounded-none bg-muted px-1.5 py-0.5 text-xs"
+        >
+          {name}
+          <button
+            type="button"
+            aria-label={`Remove ${name}`}
+            onClick={() => onChange(value.filter((v) => v !== name))}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-3" />
+          </button>
+        </span>
+      ))}
+      <input
+        list={suggestionsId}
+        value={draft}
+        onChange={(e) => {
+          const v = e.target.value
+          if (v.endsWith(",")) add(v.slice(0, -1))
+          else setDraft(v)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault()
+            add(draft)
+          } else if (e.key === "Backspace" && !draft && value.length) {
+            onChange(value.slice(0, -1))
+          }
+        }}
+        onBlur={() => add(draft)}
+        placeholder={value.length ? "" : placeholder}
+        className="h-6 min-w-24 flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-muted-foreground"
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { formatArtists } from "@/lib/format"
 import { coverUrl } from "@/lib/types"
 import type { PlayableTrack } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -131,7 +132,7 @@ export function CommandPalette() {
               <div className="min-w-0">
                 <div className="truncate text-sm">{t.title}</div>
                 <div className="truncate text-xs text-muted-foreground">
-                  {t.artist ?? "Unknown artist"}
+                  {formatArtists(t)}
                   {t.album ? ` · ${t.album}` : ""}
                 </div>
               </div>

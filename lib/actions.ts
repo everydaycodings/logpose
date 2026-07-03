@@ -113,6 +113,7 @@ const updateTrackSchema = z.object({
   trackNumber: z.coerce.number().int().min(0).max(100000).optional(),
   discNumber: z.coerce.number().int().min(0).max(1000).optional(),
   lyrics: z.string().max(20000).optional(),
+  featured: z.array(z.string().max(300)).optional(),
 })
 
 export async function updateTrack(
@@ -148,6 +149,24 @@ export async function updateTrack(
     }
   }
 
+  // Resolve featured artists by name (create if needed), skipping blanks,
+  // duplicates, and the primary artist.
+  const featuredIds: string[] = []
+  const seen = new Set<string>()
+  if (data.artist) seen.add(normalizeKey(data.artist))
+  for (const raw of data.featured ?? []) {
+    const name = raw.trim()
+    const slug = normalizeKey(name)
+    if (!slug || seen.has(slug)) continue
+    seen.add(slug)
+    const artist = await db.artist.upsert({
+      where: { slug },
+      update: {},
+      create: { name, slug },
+    })
+    featuredIds.push(artist.id)
+  }
+
   await db.track.update({
     where: { id: trackId },
     data: {
@@ -159,6 +178,7 @@ export async function updateTrack(
       lyrics: data.lyrics,
       artistId,
       albumId,
+      featuredArtists: { set: featuredIds.map((id) => ({ id })) },
     },
   })
   revalidatePath(`/track/${trackId}/edit`)

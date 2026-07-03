@@ -17,7 +17,7 @@ import { useState } from "react"
 import { FullPlayer } from "@/components/player/full-player"
 import { QueuePanel } from "@/components/player/queue-panel"
 import { Slider } from "@/components/ui/slider"
-import { formatTime } from "@/lib/format"
+import { formatArtists, formatTime } from "@/lib/format"
 import { useAlbumColor } from "@/lib/player/use-album-color"
 import { cn } from "@/lib/utils"
 import { current, usePlayer } from "@/store/player"
@@ -76,7 +76,7 @@ export function PlayerBar() {
             <div className="min-w-0">
               <div className="truncate text-sm font-medium">{track.title}</div>
               <div className="truncate text-xs text-muted-foreground">
-                {track.artist ?? "Unknown artist"}
+                {formatArtists(track)}
               </div>
             </div>
             <CaretUp className="hidden size-4 shrink-0 text-muted-foreground md:block" />
