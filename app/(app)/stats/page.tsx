@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { ActivityChart } from "./activity-chart"
 import { ArtistCard, CardGrid } from "@/components/library/media-cards"
 import { TrackList } from "@/components/library/track-list"
 import { Section } from "@/components/layout/section"
@@ -26,8 +27,6 @@ export default async function StatsPage() {
     )
   }
 
-  const maxCount = Math.max(1, ...stats.activity.map((a) => a.count))
-
   const headline = [
     { label: "Total plays", value: String(stats.totalPlays) },
     { label: "Time at sea", value: formatDuration(stats.totalListeningMs) },
@@ -50,16 +49,7 @@ export default async function StatsPage() {
       </div>
 
       <Section title="Last 30 days">
-        <div className="flex h-32 items-end gap-1 rounded-2xl border border-border bg-card/50 p-4">
-          {stats.activity.map((a) => (
-            <div
-              key={a.date}
-              title={`${a.date}: ${a.count} play${a.count === 1 ? "" : "s"}`}
-              className="flex-1 rounded-t bg-seal/80 transition-all hover:bg-seal"
-              style={{ height: `${Math.max(2, (a.count / maxCount) * 100)}%` }}
-            />
-          ))}
-        </div>
+        <ActivityChart activity={stats.activity} />
       </Section>
 
       {stats.topArtists.length > 0 && (

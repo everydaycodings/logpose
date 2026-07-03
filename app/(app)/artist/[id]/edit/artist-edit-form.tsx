@@ -7,7 +7,8 @@ import { Cover } from "@/components/library/cover"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { updateArtist } from "@/lib/actions"
+import { deleteArtist, updateArtist } from "@/lib/actions"
+import { confirm } from "@/lib/dialog"
 
 type Data = { id: string; name: string; hasCover: boolean }
 
@@ -88,6 +89,26 @@ export function ArtistEditForm({ data }: { data: Data }) {
           </Button>
           <Button type="button" variant="ghost" onClick={() => router.back()}>
             Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            className="ml-auto"
+            onClick={async () => {
+              const ok = await confirm({
+                title: "Delete artist?",
+                description: `"${name}" and its albums will be removed. Your songs stay in your library.`,
+                confirmLabel: "Delete",
+                destructive: true,
+              })
+              if (!ok) return
+              await deleteArtist(data.id)
+              toast.success("Artist deleted")
+              router.push("/")
+              router.refresh()
+            }}
+          >
+            Delete
           </Button>
         </div>
       </div>

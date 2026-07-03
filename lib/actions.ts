@@ -188,6 +188,21 @@ export async function updateArtist(artistId: string, name: string) {
   return { ok: true }
 }
 
+/** Delete an artist. Cascades to its albums; tracks stay but lose artist/album. */
+export async function deleteArtist(id: string) {
+  const artist = await db.artist.findUnique({
+    where: { id },
+    select: { coverKey: true, albums: { select: { coverKey: true } } },
+  })
+  if (!artist) return
+  await db.artist.delete({ where: { id } })
+  await deleteCoverIfUnreferenced(artist.coverKey)
+  for (const album of artist.albums) {
+    await deleteCoverIfUnreferenced(album.coverKey)
+  }
+  revalidatePath("/")
+}
+
 const updateAlbumSchema = z.object({
   title: z.string().min(1).max(300),
   year: z.coerce.number().int().min(0).max(3000).optional(),
@@ -221,6 +236,18 @@ export async function updateAlbum(
   revalidatePath(`/album/${albumId}`)
   revalidatePath("/")
   return { ok: true }
+}
+
+/** Delete an album. Tracks stay in the library but lose their album. */
+export async function deleteAlbum(id: string) {
+  const album = await db.album.findUnique({
+    where: { id },
+    select: { coverKey: true },
+  })
+  if (!album) return
+  await db.album.delete({ where: { id } })
+  await deleteCoverIfUnreferenced(album.coverKey)
+  revalidatePath("/")
 }
 
 /** Re-run MusicBrainz/Cover Art lookup and update the track. */
