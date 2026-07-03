@@ -18,14 +18,22 @@ export async function GET(
     select: {
       coverKey: true,
       tracks: {
-        select: { track: { select: { coverKey: true } } },
-        where: { track: { coverKey: { not: null } } },
+        select: {
+          track: { select: { coverKey: true, album: { select: { coverKey: true } } } },
+        },
+        // A track's cover may live on the track OR its album — accept either.
+        where: {
+          track: {
+            OR: [{ coverKey: { not: null } }, { album: { coverKey: { not: null } } }],
+          },
+        },
         take: 1,
         orderBy: { position: "asc" },
       },
     },
   })
-  const key = playlist?.coverKey ?? playlist?.tracks[0]?.track.coverKey
+  const first = playlist?.tracks[0]?.track
+  const key = playlist?.coverKey ?? first?.coverKey ?? first?.album?.coverKey
   if (!key) return new Response("No cover", { status: 404 })
 
   const etag = `"${key}"`

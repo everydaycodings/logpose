@@ -19,7 +19,10 @@ export async function GET(
       coverKey: true,
       tracks: {
         select: { coverKey: true, album: { select: { coverKey: true } } },
-        where: { coverKey: { not: null } },
+        // A track's cover may live on the track OR its album — accept either.
+        where: {
+          OR: [{ coverKey: { not: null } }, { album: { coverKey: { not: null } } }],
+        },
         take: 1,
       },
     },

@@ -49,7 +49,7 @@ export default async function ArtistPage({
 
       <Section title="Songs">
         <div className="rounded-2xl bg-card/50 p-2">
-          <TrackList tracks={artist.tracks} numbered showCover={false} />
+          <TrackList tracks={artist.tracks} numbered />
         </div>
       </Section>
     </div>
