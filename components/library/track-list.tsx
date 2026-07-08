@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { AddToPlaylistSub } from "@/components/library/add-to-playlist"
 import { LikeButton } from "@/components/library/like-button"
+import { DownloadMenuItem } from "@/components/offline/download-button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -180,6 +181,7 @@ function TrackRow({
             <DropdownMenuItem onSelect={() => enqueue(track, false)}>
               <Queue className="size-4" /> Add to queue
             </DropdownMenuItem>
+            <DownloadMenuItem track={track} />
             <AddToPlaylistSub trackId={track.id} />
             <DropdownMenuSeparator />
             {track.albumId && (

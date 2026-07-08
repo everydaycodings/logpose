@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { CollectionHeader } from "@/components/library/collection-header"
 import { PlayAllButton } from "@/components/library/play-all-button"
+import { DownloadCollectionButton } from "@/components/offline/download-button"
 import { PlaylistActions } from "@/components/playlists/playlist-actions"
 import { PlaylistTracks } from "@/components/playlists/playlist-tracks"
 import { getPlaylist } from "@/lib/services/queries"
@@ -33,6 +34,7 @@ export default async function PlaylistPage({
       >
         <div className="flex items-center gap-2">
           <PlayAllButton tracks={playlist.tracks} />
+          <DownloadCollectionButton tracks={playlist.tracks} />
           <PlaylistActions id={playlist.id} name={playlist.name} />
         </div>
       </CollectionHeader>

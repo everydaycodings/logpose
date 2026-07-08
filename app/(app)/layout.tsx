@@ -1,6 +1,7 @@
 import { MobileHeader } from "@/components/layout/mobile-header"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { Sidebar } from "@/components/layout/sidebar"
+import { OfflineGate } from "@/components/offline/offline-gate"
 import { CommandPalette } from "@/components/player/command-palette"
 import { KeyboardShortcuts } from "@/components/player/keyboard-shortcuts"
 import { PlayerBar } from "@/components/player/player-bar"
@@ -40,6 +41,7 @@ export default async function AppLayout({
       <CommandPalette />
       <DialogHost />
       <ServiceWorkerRegister />
+      <OfflineGate />
     </div>
   )
 }

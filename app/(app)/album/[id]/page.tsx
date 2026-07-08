@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { CollectionHeader } from "@/components/library/collection-header"
 import { PlayAllButton } from "@/components/library/play-all-button"
 import { TrackList } from "@/components/library/track-list"
+import { DownloadCollectionButton } from "@/components/offline/download-button"
 import { getAlbum } from "@/lib/services/queries"
 
 export default async function AlbumPage({
@@ -31,7 +32,10 @@ export default async function AlbumPage({
           </>
         }
       >
-        <PlayAllButton tracks={album.tracks} />
+        <div className="flex items-center gap-2">
+          <PlayAllButton tracks={album.tracks} />
+          <DownloadCollectionButton tracks={album.tracks} />
+        </div>
       </CollectionHeader>
 
       <div className="rounded-2xl bg-card/50 p-2">

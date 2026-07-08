@@ -1,5 +1,6 @@
 import { DownloadSimple, FileText } from "@phosphor-icons/react/dist/ssr"
 import type { Metadata } from "next"
+import { DownloadLibrary } from "@/components/offline/download-library"
 import { LastfmSettings } from "@/components/settings/lastfm-settings"
 import { Maintenance } from "@/components/settings/maintenance"
 import { RestorePanel } from "@/components/settings/restore-panel"
@@ -89,6 +90,17 @@ export default async function SettingsPage() {
             </Button>
           </div>
         </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-1 font-heading text-2xl">Offline</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Make your music available without a connection. Songs you play are
+          cached automatically; you can also download individual songs, albums,
+          playlists, or your whole library. Downloads stay valid for 30 days and
+          refresh each time you open the app online.
+        </p>
+        <DownloadLibrary />
       </section>
 
       <section className="mb-10">

@@ -1,9 +1,21 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { enqueuePlay } from "@/lib/offline/db"
 import { audioGraph } from "@/lib/player/audio-graph"
 import { coverUrl, streamUrl } from "@/lib/types"
+import { useDownloads } from "@/store/downloads"
 import { current, EQ_BANDS, nextTrack, usePlayer } from "@/store/player"
+
+// Record a play, queuing it for later replay if the request fails (offline).
+async function recordPlay(id: string) {
+  try {
+    const res = await fetch(`/api/tracks/${id}/play`, { method: "POST" })
+    if (!res.ok) await enqueuePlay(id)
+  } catch {
+    await enqueuePlay(id)
+  }
+}
 
 /**
  * Headless audio engine. Renders two hidden <audio> elements and drives them
@@ -225,9 +237,11 @@ export function PlayerEngine() {
     // counting skips.
     if (!countedRef.current && durMs > 0 && posMs >= Math.min(durMs / 2, 240_000)) {
       countedRef.current = true
-      const id = current(s)?.id
-      if (id) {
-        void fetch(`/api/tracks/${id}/play`, { method: "POST" }).catch(() => {})
+      const track = current(s)
+      if (track) {
+        void recordPlay(track.id)
+        // Auto-cache what you actually listen to (no-op if already downloaded).
+        void useDownloads.getState().download(track)
       }
     }
 
