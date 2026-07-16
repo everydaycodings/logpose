@@ -2,6 +2,7 @@
 
 import {
   ChartBar,
+  CloudSlash,
   Disc,
   DotsThreeOutline,
   GearSix,
@@ -39,6 +40,7 @@ const moreLinks = [
   { href: "/albums", label: "Albums", icon: Disc },
   { href: "/artists", label: "Artists", icon: MicrophoneStage },
   { href: "/stats", label: "Stats", icon: ChartBar },
+  { href: "/offline", label: "Offline", icon: CloudSlash },
   { href: "/import", label: "Add music", icon: UploadSimple },
   { href: "/settings", label: "Settings", icon: GearSix },
 ]

@@ -2,6 +2,7 @@
 
 import {
   ChartBar,
+  CloudSlash,
   Disc,
   GearSix,
   Heart,
@@ -51,6 +52,9 @@ export function Sidebar({ playlists }: { playlists: PlaylistLink[] }) {
         </NavLink>
         <NavLink href="/liked" icon={<Heart className="size-5" />}>
           Liked
+        </NavLink>
+        <NavLink href="/offline" icon={<CloudSlash className="size-5" />}>
+          Offline
         </NavLink>
         <NavLink href="/stats" icon={<ChartBar className="size-5" />}>
           Stats

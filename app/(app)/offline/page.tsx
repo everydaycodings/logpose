@@ -2,7 +2,13 @@
 
 import { CloudSlash } from "@phosphor-icons/react"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
 import { TrackList } from "@/components/library/track-list"
 import { allTracks } from "@/lib/offline/db"
 import { formatBytes } from "@/lib/format"
@@ -11,11 +17,28 @@ import { useDownloads } from "@/store/downloads"
 
 const WARN_BYTES = 1024 * 1024 * 1024 // 1 GB
 
+function subscribeOnline(onChange: () => void) {
+  window.addEventListener("online", onChange)
+  window.addEventListener("offline", onChange)
+  return () => {
+    window.removeEventListener("online", onChange)
+    window.removeEventListener("offline", onChange)
+  }
+}
+
 export default function OfflinePage() {
   const router = useRouter()
   const [tracks, setTracks] = useState<PlayableTrack[]>([])
   const [bytes, setBytes] = useState(0)
   const [loaded, setLoaded] = useState(false)
+  // The page is also reachable from the nav while online; only show the
+  // offline banner (and bounce back home on reconnect) when actually offline.
+  const online = useSyncExternalStore(
+    subscribeOnline,
+    () => navigator.onLine,
+    () => true,
+  )
+  const wasOffline = useRef(false)
   // Re-read the library whenever a download is added/removed.
   const statusVersion = useDownloads((s) => s.bytesUsed)
 
@@ -31,25 +54,30 @@ export default function OfflinePage() {
     void load()
   }, [load, statusVersion])
 
-  // Back to the normal app as soon as the connection returns.
+  // Back to the normal app as soon as the connection returns — but only when
+  // the user was forced here by going offline, not when browsing intentionally.
   useEffect(() => {
-    const onOnline = () => router.replace("/")
-    window.addEventListener("online", onOnline)
-    return () => window.removeEventListener("online", onOnline)
-  }, [router])
+    if (!online) {
+      wasOffline.current = true
+    } else if (wasOffline.current) {
+      router.replace("/")
+    }
+  }, [online, router])
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="mb-6 flex items-center gap-3 rounded-2xl border border-border bg-card/50 p-4">
-        <CloudSlash className="size-6 shrink-0 text-muted-foreground" />
-        <div>
-          <div className="font-medium">You&apos;re offline</div>
-          <div className="text-sm text-muted-foreground">
-            Showing your downloaded songs. They&apos;ll sync and the app returns
-            to normal when you&apos;re back online.
+      {!online && (
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-border bg-card/50 p-4">
+          <CloudSlash className="size-6 shrink-0 text-muted-foreground" />
+          <div>
+            <div className="font-medium">You&apos;re offline</div>
+            <div className="text-sm text-muted-foreground">
+              Showing your downloaded songs. They&apos;ll sync and the app
+              returns to normal when you&apos;re back online.
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="mb-4 flex items-center justify-between px-1">
         <h1 className="font-heading text-3xl">Downloaded</h1>
