@@ -9,10 +9,10 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@prisma/client", "prisma"],
   experimental: {
     // Audio uploads can be large.
-    serverActions: { bodySizeLimit: "100mb" },
+    serverActions: { bodySizeLimit: "500mb" },
     // proxy.ts buffers each request body (default 10MB), which truncated large
     // uploads and made request.formData() fail. Match the 100MB upload cap.
-    proxyClientMaxBodySize: "100mb",
+    proxyClientMaxBodySize: "500mb",
   },
 }
 
