@@ -8,7 +8,7 @@ const ACCEPTED_TYPES = ["audio/", "video/ogg", "application/ogg"]
 const ACCEPTED_EXT = [
   ".mp3", ".m4a", ".aac", ".flac", ".wav", ".ogg", ".opus", ".webm", ".aiff",
 ]
-const MAX_BYTES = 100 * 1024 * 1024 // 100 MB
+const MAX_BYTES = 500 * 1024 * 1024 // 500 MB
 
 function isAudio(file: File): boolean {
   const type = file.type || ""
